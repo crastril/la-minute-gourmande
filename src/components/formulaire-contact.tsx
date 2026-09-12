@@ -5,7 +5,7 @@ import { useState } from "react";
 const champ =
   "w-full rounded-ticket border border-creme/15 bg-noir px-4 py-3 text-sm text-creme placeholder:text-creme-tres-doux transition-colors focus:border-beurre/60 focus:outline-none";
 
-export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) {
+export function FormulaireContact() {
   const [etat, setEtat] = useState<"repos" | "envoi" | "envoye">("repos");
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -20,7 +20,7 @@ export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) 
       const reponse = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...donnees, sujet }),
+        body: JSON.stringify(donnees),
       });
       const resultat: { ok?: boolean; erreur?: string } = await reponse.json();
 
@@ -44,9 +44,8 @@ export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) 
       >
         <p className="font-display text-2xl text-creme">Message reçu.</p>
         <p className="mx-auto mt-3 max-w-[38ch] text-sm text-creme-doux">
-          {sujet === "traiteur"
-            ? "Nous revenons vers vous sous 48 h ouvrées avec une proposition chiffrée."
-            : "Nous vous répondons sous 24 h ouvrées."}
+          Nous vous répondons sous 24 h ouvrées. Pour une commande du jour, le
+          téléphone reste plus rapide.
         </p>
       </div>
     );
@@ -79,43 +78,10 @@ export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) 
           autoComplete="email"
         />
       </label>
-      <label className={sujet === "traiteur" ? "" : "sm:col-span-2"}>
+      <label className="sm:col-span-2">
         <span className="sr-only">Téléphone</span>
         <input name="telephone" type="tel" placeholder="Téléphone" className={champ} autoComplete="tel" />
       </label>
-
-      {sujet === "traiteur" && (
-        <>
-          <label>
-            <span className="sr-only">Type d&apos;événement</span>
-            <select name="typeEvenement" className={champ} defaultValue="">
-              <option value="" disabled>
-                Type d&apos;événement
-              </option>
-              {["Anniversaire", "Séminaire", "Mariage", "Pot de départ", "Autre"].map((t) => (
-                <option key={t} value={t} className="bg-noir">
-                  {t}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span className="sr-only">Nombre de convives</span>
-            <input
-              name="convives"
-              type="number"
-              min={10}
-              max={120}
-              placeholder="Nombre de convives"
-              className={champ}
-            />
-          </label>
-          <label>
-            <span className="sr-only">Date souhaitée</span>
-            <input name="date" type="date" placeholder="Date souhaitée" className={champ} />
-          </label>
-        </>
-      )}
 
       <label className="sm:col-span-2">
         <span className="sr-only">Message</span>
@@ -124,11 +90,7 @@ export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) 
           required
           rows={5}
           maxLength={4000}
-          placeholder={
-            sujet === "traiteur"
-              ? "Décrivez votre événement : lieu, ambiance, contraintes alimentaires… *"
-              : "Votre message *"
-          }
+          placeholder="Votre message *"
           className={`${champ} resize-none`}
         />
       </label>
@@ -147,7 +109,7 @@ export function FormulaireContact({ sujet }: { sujet: "contact" | "traiteur" }) 
         disabled={etat === "envoi"}
         className="rounded-ticket bg-beurre px-7 py-4 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair disabled:opacity-60 sm:col-span-2"
       >
-        {etat === "envoi" ? "Envoi…" : sujet === "traiteur" ? "Demander un devis" : "Envoyer le message"}
+        {etat === "envoi" ? "Envoi…" : "Envoyer le message"}
       </button>
     </form>
   );

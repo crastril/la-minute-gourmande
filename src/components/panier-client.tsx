@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { usePanier } from "@/components/cart-provider";
+import { estPrincipal } from "@/data/menu";
 import { CRENEAUX, RESTAURANT } from "@/data/restaurant";
 import { prix } from "@/lib/format";
 
@@ -45,14 +46,24 @@ function Stepper({
 const champ =
   "w-full rounded-ticket border border-creme/15 bg-noir px-4 py-3 text-sm text-creme placeholder:text-creme-tres-doux transition-colors focus:border-beurre/60 focus:outline-none";
 
-export function PanierClient() {
+export function PanierClient({
+  paiementEnLigneDisponible,
+}: {
+  paiementEnLigneDisponible: boolean;
+}) {
   const { detail, total, nombreArticles, definirQuantite, retirer, hydrate } = usePanier();
   const parametres = useSearchParams();
   const annule = parametres.get("annule") === "1";
 
   const [creneau, setCreneau] = useState("");
+  const [paiement, setPaiement] = useState<"enligne" | "comptoir">(
+    paiementEnLigneDisponible ? "enligne" : "comptoir",
+  );
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+
+  // Même règle que le serveur : une commande porte sur un menu ou un plat.
+  const aUnPrincipal = detail.some((ligne) => estPrincipal(ligne.produit));
 
   async function onSubmit(evenement: React.FormEvent<HTMLFormElement>) {
     evenement.preventDefault();
@@ -69,6 +80,7 @@ export function PanierClient() {
           lignes: detail.map((l) => ({ id: l.id, quantite: l.quantite })),
           creneau: donnees.get("creneau"),
           note: donnees.get("note"),
+          paiement,
           client: {
             prenom: donnees.get("prenom"),
             nom: donnees.get("nom"),
@@ -103,9 +115,9 @@ export function PanierClient() {
     return (
       <div className="perfore rounded-ticket border border-creme/12 bg-encre/50 px-8 py-20 text-center">
         <p className="font-display text-3xl text-creme">Votre panier est vide.</p>
-        <p className="mx-auto mt-4 max-w-[36ch] text-sm text-creme-doux">
-          La carte change chaque matin — il y a sûrement quelque chose pour vous
-          aujourd&apos;hui.
+        <p className="mx-auto mt-4 max-w-[38ch] text-sm text-creme-doux">
+          La réservation en ligne concerne les menus et les plats du midi. La
+          viennoiserie et le snacking s&apos;achètent directement au comptoir.
         </p>
         <Link
           href="/carte"
@@ -209,6 +221,49 @@ export function PanierClient() {
           </div>
         </fieldset>
 
+        <fieldset className="mt-8">
+          <legend className="sur-titre mb-3">Règlement</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              {
+                valeur: "enligne" as const,
+                titre: "Payer maintenant",
+                detail: "Par carte, en ligne. Votre commande est réglée avant le retrait.",
+                disponible: paiementEnLigneDisponible,
+              },
+              {
+                valeur: "comptoir" as const,
+                titre: "Payer au retrait",
+                detail: "Vous réglez sur place en récupérant votre commande.",
+                disponible: true,
+              },
+            ].map((option) => (
+              <label
+                key={option.valeur}
+                className={`cursor-pointer rounded-ticket border p-4 transition-colors ${
+                  paiement === option.valeur
+                    ? "border-beurre bg-beurre/10"
+                    : "border-creme/15 hover:border-beurre/45"
+                } ${option.disponible ? "" : "pointer-events-none opacity-40"}`}
+              >
+                <input
+                  type="radio"
+                  name="paiement"
+                  value={option.valeur}
+                  checked={paiement === option.valeur}
+                  onChange={() => setPaiement(option.valeur)}
+                  disabled={!option.disponible}
+                  className="sr-only"
+                />
+                <span className="block text-sm text-creme">{option.titre}</span>
+                <span className="mt-1 block text-[0.75rem] leading-relaxed text-creme-doux">
+                  {option.disponible ? option.detail : "Momentanément indisponible."}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <div className="mt-7 grid gap-3 sm:grid-cols-2">
           <label className="sm:col-span-1">
             <span className="sr-only">Prénom</span>
@@ -257,12 +312,23 @@ export function PanierClient() {
           </p>
         )}
 
+        {!aUnPrincipal && (
+          <p className="mt-7 rounded-ticket border border-beurre/30 bg-beurre/10 px-4 py-3 text-sm text-beurre-clair">
+            Ajoutez au moins un menu ou un plat : les boissons seules se prennent
+            directement au comptoir.
+          </p>
+        )}
+
         <button
           type="submit"
-          disabled={envoi}
+          disabled={envoi || !aUnPrincipal}
           className="mt-7 w-full rounded-ticket bg-beurre px-6 py-4 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {envoi ? "Envoi en cours…" : `Valider la commande · ${prix(total)}`}
+          {envoi
+            ? "Envoi en cours…"
+            : paiement === "enligne"
+              ? `Payer ${prix(total)}`
+              : `Réserver · ${prix(total)} à régler au retrait`}
         </button>
 
         <p className="chiffres mt-4 text-[0.65rem] leading-relaxed text-creme-tres-doux">

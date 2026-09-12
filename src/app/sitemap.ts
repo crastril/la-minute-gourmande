@@ -4,7 +4,6 @@ import { RESTAURANT } from "@/data/restaurant";
 const PAGES = [
   { chemin: "", priorite: 1 },
   { chemin: "/carte", priorite: 0.9 },
-  { chemin: "/traiteur", priorite: 0.8 },
   { chemin: "/a-propos", priorite: 0.6 },
   { chemin: "/contact", priorite: 0.6 },
   { chemin: "/mentions-legales", priorite: 0.2 },

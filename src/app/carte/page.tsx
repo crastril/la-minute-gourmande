@@ -8,7 +8,7 @@ import { RESTAURANT } from "@/data/restaurant";
 export const metadata: Metadata = {
   title: "La carte",
   description:
-    "Formules, entrées, plats, desserts et boissons préparés le matin même. Commandez en ligne et récupérez en 15 minutes.",
+    "Viennoiseries, snacking et pâtisseries au comptoir ; menus et plats du midi à réserver en ligne et à récupérer entre 11h30 et 13h30.",
 };
 
 export default function Carte() {
@@ -22,12 +22,14 @@ export default function Carte() {
           La carte
         </h1>
         <p
-          className="animate-rise mt-7 max-w-[52ch] leading-relaxed text-creme-doux"
+          className="animate-rise mt-7 max-w-[56ch] leading-relaxed text-creme-doux"
           style={{ animationDelay: "220ms" }}
         >
-          Elle bouge tous les jours selon le marché. Ajoutez ce qui vous fait
-          envie, choisissez votre créneau, et passez récupérer votre commande{" "}
-          {RESTAURANT.delaiRetrait} minutes plus tard.
+          Les <span className="text-creme">menus, plats et boissons</span> se
+          réservent en ligne pour le service du midi, et se règlent au choix
+          maintenant ou au retrait. Le reste — viennoiseries, snacking,
+          pâtisseries — s&apos;achète directement au comptoir, sans commander à
+          l&apos;avance.
         </p>
       </section>
 

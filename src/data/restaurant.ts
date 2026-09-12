@@ -1,11 +1,11 @@
 /**
  * Informations de l'établissement.
  * ⚠️ Valeurs de démonstration : à remplacer par les données réelles du client
- * (adresse, téléphone, horaires, SIRET, réseaux sociaux).
+ * (adresse, téléphone, horaires exacts, SIRET, réseaux sociaux).
  */
 export const RESTAURANT = {
   nom: "La Minute Gourmande",
-  baseline: "Le fait-maison, à la minute.",
+  baseline: "Boulangerie et restauration, en face du lycée.",
   ville: "Bordeaux",
   adresse: "18 rue des Faussets",
   codePostal: "33000",
@@ -16,21 +16,26 @@ export const RESTAURANT = {
   instagram: "https://instagram.com/laminutegourmande",
   facebook: "https://facebook.com/laminutegourmande",
   fondation: 2019,
+  /** Temps de préparation annoncé pour une commande de restauration. */
   delaiRetrait: 15,
 } as const;
 
 export const HORAIRES = [
-  { jour: "Lundi", service: "11h30 — 14h30" },
-  { jour: "Mardi", service: "11h30 — 14h30 · 18h30 — 21h00" },
-  { jour: "Mercredi", service: "11h30 — 14h30 · 18h30 — 21h00" },
-  { jour: "Jeudi", service: "11h30 — 14h30 · 18h30 — 21h00" },
-  { jour: "Vendredi", service: "11h30 — 14h30 · 18h30 — 21h30" },
-  { jour: "Samedi", service: "10h00 — 15h00" },
+  { jour: "Lundi", service: "06h30 — 19h00" },
+  { jour: "Mardi", service: "06h30 — 19h00" },
+  { jour: "Mercredi", service: "06h30 — 19h00" },
+  { jour: "Jeudi", service: "06h30 — 19h00" },
+  { jour: "Vendredi", service: "06h30 — 19h00" },
+  { jour: "Samedi", service: "07h00 — 13h00" },
   { jour: "Dimanche", service: "Fermé", ferme: true },
 ] as const;
 
-/** Créneaux de retrait proposés au moment de la commande. */
+/**
+ * Créneaux de retrait proposés pour les commandes de restauration.
+ * Le service du midi uniquement : c'est le seul moment où la cuisine tourne.
+ */
 export const CRENEAUX = [
+  "11h30",
   "11h45",
   "12h00",
   "12h15",
@@ -39,8 +44,4 @@ export const CRENEAUX = [
   "13h00",
   "13h15",
   "13h30",
-  "18h45",
-  "19h00",
-  "19h15",
-  "19h30",
 ] as const;

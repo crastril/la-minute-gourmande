@@ -1,6 +1,26 @@
 # La Minute Gourmande
 
-Site vitrine + commande en ligne (click & collect) et demande de devis traiteur.
+Boulangerie artisanale et restauration du midi, en face d'un lycée. Le site sert de vitrine à l'ensemble des produits, et permet de réserver en ligne les repas du midi (click & collect).
+
+## Les deux univers du catalogue
+
+C'est la règle structurante du projet, encodée dans `src/data/menu.ts` :
+
+| | Vitrine | Commandable |
+| --- | --- | --- |
+| Catégories | viennoiseries, snacking, pâtisseries | menus, plats, boissons |
+| Sur le site | consultable, prix affiché | ajoutable au panier |
+| Achat | au comptoir uniquement | réservation en ligne |
+
+La boulangerie n'est pas commandable **par choix économique** : avec ~0,25 € de frais fixes par transaction, vendre un pain au chocolat à 1,30 € en ligne coûterait ~22 % du prix. Ces produits se prennent au comptoir.
+
+Trois règles en découlent, appliquées **côté serveur** et pas seulement dans l'interface :
+
+1. un produit de vitrine est rejeté même si la requête est forgée à la main ;
+2. une commande doit contenir au moins un **menu ou un plat** — une boisson seule ne suffit pas ;
+3. le créneau doit appartenir à la liste du midi (11h30 → 13h30).
+
+Le client choisit ensuite son règlement : **en ligne** (Stripe Checkout) ou **au retrait**. L'option « payer maintenant » disparaît automatiquement si aucune clé Stripe n'est configurée.
 
 **Stack** — Next.js 16 (App Router, React Compiler, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Stripe Checkout · déploiement Vercel.
 
@@ -51,12 +71,11 @@ src/
   app/
     page.tsx                    Accueil
     carte/                      Carte complète, ancres par catégorie
-    panier/                     Récapitulatif + créneau + coordonnées
+    panier/                     Récapitulatif + créneau + règlement
     commande/confirmee/         Ticket de confirmation
-    traiteur/                   Prestations + formulaire de devis
     a-propos/  contact/  mentions-legales/
     api/checkout/route.ts       Création de la commande (Stripe ou comptoir)
-    api/contact/route.ts        Contact & devis (Resend ou logs)
+    api/contact/route.ts        Contact (Resend ou logs)
     sitemap.ts  robots.ts  not-found.tsx
   components/
     cart-provider.tsx           Panier (store externe + useSyncExternalStore)
@@ -65,9 +84,13 @@ src/
     panier-client.tsx  panier-flottant.tsx  vider-panier.tsx
     formulaire-contact.tsx  reveal.tsx
   data/
-    menu.ts                     Catalogue produits
-    restaurant.ts               Coordonnées, horaires, créneaux
-  lib/format.ts                 Prix en euros, référence de commande
+    menu.ts                     Catalogue + drapeaux « commandable »
+    restaurant.ts               Coordonnées, horaires, créneaux du midi
+  lib/
+    format.ts                   Prix en euros, référence de commande
+    stripe.ts                   Résolution et garde-fous de la clé Stripe
+scripts/
+  verifier-stripe.mjs           `npm run stripe:verifier`
 ```
 
 ### Panier

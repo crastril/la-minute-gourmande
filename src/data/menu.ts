@@ -2,21 +2,66 @@
  * Catalogue produits.
  *
  * ⚠️ PLACEHOLDER — contenu de démonstration.
- * À remplacer par les produits réels extraits des flyers du client
- * (nom, description, prix TTC en centimes, catégorie, allergènes).
- * Le reste du site (carte, panier, paiement) lit uniquement ce fichier :
- * remplacer le tableau suffit, aucun composant à modifier.
+ * Les noms et les prix seront remplacés par ceux des flyers du client.
+ * En revanche la STRUCTURE ci-dessous est la bonne et ne bougera plus :
+ *
+ *   — une catégorie `commandable: false` est une VITRINE : le produit est
+ *     montré sur le site mais ne peut pas être mis au panier. C'est le cas de
+ *     la boulangerie (viennoiseries, snacking, pâtisseries) : les frais fixes
+ *     de paiement rendraient une vente à 1,30 € absurde, et ces produits
+ *     s'achètent au comptoir.
+ *
+ *   — une catégorie `commandable: true` peut être réservée en ligne, puis
+ *     payée au choix en ligne ou au retrait. C'est la partie restauration
+ *     (menus, plats) plus les boissons qui les accompagnent.
+ *
+ * Pour rendre une catégorie commandable, il suffit de basculer son drapeau :
+ * la carte, le panier et l'API s'alignent automatiquement.
  */
 
 export const CATEGORIES = [
-  { id: "formules", nom: "Formules", intro: "Entrée + plat + dessert, pensées pour la pause déjeuner." },
-  { id: "entrees", nom: "Entrées", intro: "Petites assiettes de saison, préparées le matin même." },
-  { id: "plats", nom: "Plats", intro: "Le cœur de la carte, mijoté ou saisi à la commande." },
-  { id: "desserts", nom: "Desserts", intro: "Pâtisserie maison, sans conservateur." },
-  { id: "boissons", nom: "Boissons", intro: "Limonades artisanales et vins de petits producteurs." },
+  {
+    id: "menus",
+    nom: "Menus",
+    intro: "Plat, boisson et dessert. À réserver en ligne pour le midi.",
+    commandable: true,
+  },
+  {
+    id: "plats",
+    nom: "Burgers & plats",
+    intro: "Préparés à la commande, prêts pour votre créneau de retrait.",
+    commandable: true,
+  },
+  {
+    id: "boissons",
+    nom: "Boissons",
+    intro: "À ajouter à votre commande.",
+    commandable: true,
+  },
+  {
+    id: "snacking",
+    nom: "Snacking salé",
+    intro: "Au comptoir, toute la journée.",
+    commandable: false,
+  },
+  {
+    id: "viennoiseries",
+    nom: "Viennoiseries & pains",
+    intro: "Cuits sur place, plusieurs fournées par jour.",
+    commandable: false,
+  },
+  {
+    id: "patisseries",
+    nom: "Pâtisseries",
+    intro: "La vitrine sucrée, à emporter au comptoir.",
+    commandable: false,
+  },
 ] as const;
 
 export type CategorieId = (typeof CATEGORIES)[number]["id"];
+
+/** Catégories dont au moins un article est exigé pour valider une commande. */
+export const CATEGORIES_PRINCIPALES: CategorieId[] = ["menus", "plats"];
 
 export type Produit = {
   id: string;
@@ -25,173 +70,237 @@ export type Produit = {
   /** Prix TTC en centimes, pour éviter toute erreur d'arrondi. */
   prix: number;
   categorie: CategorieId;
-  /** Chemin d'une photo dans /public (ex. "/photos/blanquette.jpg"). Optionnel. */
+  /** Chemin d'une photo dans /public (ex. "/photos/burger.jpg"). Optionnel. */
   image?: string;
   tags?: string[];
   allergenes?: string[];
   populaire?: boolean;
-  /** Produit mis en avant sur la page d'accueil. */
+  /** Mis en avant sur la page d'accueil. */
   duJour?: boolean;
   epuise?: boolean;
 };
 
 export const PRODUITS: Produit[] = [
+  /* ——— Menus (commandables) ——— */
   {
-    id: "formule-du-midi",
-    nom: "Formule du midi",
-    description: "L'entrée, le plat et le dessert du jour, choisis le matin au marché.",
-    prix: 1690,
-    categorie: "formules",
-    tags: ["Entrée + plat + dessert"],
+    id: "menu-burger",
+    nom: "Menu burger",
+    description: "Le burger de votre choix, une boisson et une pâtisserie du jour.",
+    prix: 950,
+    categorie: "menus",
+    tags: ["Burger + boisson + dessert"],
     populaire: true,
     duJour: true,
+    allergenes: ["Gluten", "Lait", "Œuf", "Moutarde"],
   },
   {
-    id: "formule-express",
-    nom: "Formule express",
-    description: "Le plat du jour et un dessert, prêts en quinze minutes chrono.",
-    prix: 1350,
-    categorie: "formules",
-    tags: ["Plat + dessert"],
+    id: "menu-du-midi",
+    nom: "Menu du midi",
+    description: "Le plat du jour, une boisson et une pâtisserie.",
+    prix: 890,
+    categorie: "menus",
+    tags: ["Plat + boisson + dessert"],
+    duJour: true,
+    allergenes: ["Gluten", "Lait"],
   },
   {
-    id: "formule-vegetale",
-    nom: "Formule végétale",
-    description: "Une version entièrement végétarienne de la formule du midi.",
-    prix: 1590,
-    categorie: "formules",
+    id: "menu-vege",
+    nom: "Menu végétarien",
+    description: "Burger végétarien ou plat du jour sans viande, boisson et dessert.",
+    prix: 890,
+    categorie: "menus",
     tags: ["Végétarien"],
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+
+  /* ——— Burgers & plats (commandables) ——— */
+  {
+    id: "burger-classique",
+    nom: "Burger classique",
+    description: "Steak haché, cheddar, salade, tomate, oignons, sauce maison. Frites incluses.",
+    prix: 750,
+    categorie: "plats",
+    populaire: true,
+    duJour: true,
+    allergenes: ["Gluten", "Lait", "Œuf", "Moutarde"],
   },
   {
-    id: "veloute-butternut",
-    nom: "Velouté de butternut",
-    description: "Courge rôtie au four, crème de sarrasin torréfié, huile de noisette.",
-    prix: 650,
-    categorie: "entrees",
-    tags: ["Végétarien"],
-    allergenes: ["Lait", "Fruits à coque"],
-  },
-  {
-    id: "oeuf-parfait",
-    nom: "Œuf parfait",
-    description: "Cuit soixante-quatre minutes, lard fumé, jeunes pousses, pain grillé.",
+    id: "burger-poulet",
+    nom: "Burger poulet croustillant",
+    description: "Poulet pané, cheddar, salade, sauce burger. Frites incluses.",
     prix: 790,
-    categorie: "entrees",
-    allergenes: ["Œuf", "Gluten"],
-    populaire: true,
-  },
-  {
-    id: "terrine-maison",
-    nom: "Terrine de campagne",
-    description: "Terrine du chef, cornichons maison, moutarde à l'ancienne, pain de seigle.",
-    prix: 720,
-    categorie: "entrees",
-    allergenes: ["Gluten", "Moutarde"],
-  },
-  {
-    id: "poireaux-vinaigrette",
-    nom: "Poireaux vinaigrette",
-    description: "Poireaux fondants, vinaigrette aux herbes, éclats de noisette.",
-    prix: 620,
-    categorie: "entrees",
-    tags: ["Végétalien"],
-    allergenes: ["Fruits à coque", "Moutarde"],
-  },
-  {
-    id: "blanquette",
-    nom: "Blanquette de veau",
-    description: "Mijotée trois heures, riz pilaf, carottes fanes, champignons de Paris.",
-    prix: 1690,
     categorie: "plats",
-    populaire: true,
-    duJour: true,
-    allergenes: ["Lait", "Céleri"],
+    allergenes: ["Gluten", "Lait", "Œuf"],
   },
   {
-    id: "cabillaud",
-    nom: "Dos de cabillaud",
-    description: "Pêche du jour, beurre blanc citronné, écrasé de pommes de terre à l'huile d'olive.",
-    prix: 1890,
-    categorie: "plats",
-    duJour: true,
-    allergenes: ["Poisson", "Lait"],
-  },
-  {
-    id: "risotto-champignons",
-    nom: "Risotto aux champignons",
-    description: "Carnaroli crémeux, poêlée de champignons de saison, parmesan affiné 24 mois.",
-    prix: 1550,
+    id: "burger-vege",
+    nom: "Burger végétarien",
+    description: "Galette de légumes, cheddar, roquette, sauce au yaourt. Frites incluses.",
+    prix: 750,
     categorie: "plats",
     tags: ["Végétarien"],
-    allergenes: ["Lait", "Sulfites"],
+    allergenes: ["Gluten", "Lait", "Œuf"],
   },
   {
-    id: "poulet-fermier",
-    nom: "Poulet fermier rôti",
-    description: "Volaille des Landes, jus corsé au thym, gratin dauphinois.",
-    prix: 1750,
+    id: "plat-du-jour",
+    nom: "Plat du jour",
+    description: "Change chaque jour, affiché le matin en vitrine et sur le site.",
+    prix: 790,
     categorie: "plats",
-    allergenes: ["Lait"],
+    allergenes: ["À préciser selon le plat"],
   },
   {
-    id: "curry-legumes",
-    nom: "Curry de légumes d'hiver",
-    description: "Lait de coco, citron vert, riz complet, coriandre fraîche.",
-    prix: 1450,
+    id: "salade-cesar",
+    nom: "Salade César",
+    description: "Poulet grillé, croûtons, copeaux de parmesan, sauce César.",
+    prix: 720,
     categorie: "plats",
-    tags: ["Végétalien"],
+    allergenes: ["Gluten", "Lait", "Œuf", "Poisson"],
   },
+
+  /* ——— Boissons (commandables, en accompagnement) ——— */
   {
-    id: "tarte-citron",
-    nom: "Tarte au citron meringuée",
-    description: "Pâte sablée, crème de citron de Menton, meringue passée au chalumeau.",
-    prix: 680,
-    categorie: "desserts",
-    populaire: true,
-    allergenes: ["Gluten", "Œuf", "Lait"],
-  },
-  {
-    id: "moelleux-chocolat",
-    nom: "Moelleux au chocolat",
-    description: "Chocolat noir 70 %, cœur coulant, fleur de sel de Guérande.",
-    prix: 650,
-    categorie: "desserts",
-    allergenes: ["Gluten", "Œuf", "Lait"],
-  },
-  {
-    id: "riz-au-lait",
-    nom: "Riz au lait vanillé",
-    description: "Vanille de Madagascar, caramel au beurre salé, pointe de fleur d'oranger.",
-    prix: 590,
-    categorie: "desserts",
-    allergenes: ["Lait"],
-  },
-  {
-    id: "limonade",
-    nom: "Limonade artisanale",
-    description: "Citron, gingembre, menthe fraîche. Brassée à trente kilomètres d'ici.",
-    prix: 420,
+    id: "canette",
+    nom: "Canette 33 cl",
+    description: "Sodas et boissons fraîches au choix.",
+    prix: 180,
     categorie: "boissons",
-    tags: ["Bio"],
   },
   {
-    id: "vin-verre",
-    nom: "Verre de vin",
-    description: "Sélection du mois, domaines en agriculture biologique. 12 cl.",
-    prix: 550,
+    id: "eau",
+    nom: "Bouteille d'eau 50 cl",
+    description: "Plate ou pétillante.",
+    prix: 100,
     categorie: "boissons",
-    allergenes: ["Sulfites"],
+  },
+  {
+    id: "jus",
+    nom: "Jus de fruits",
+    description: "Orange, pomme ou multifruits.",
+    prix: 220,
+    categorie: "boissons",
   },
   {
     id: "cafe",
-    nom: "Café de spécialité",
-    description: "Torréfaction locale, note de cacao et d'agrume.",
-    prix: 250,
+    nom: "Café",
+    description: "Expresso ou allongé.",
+    prix: 120,
     categorie: "boissons",
+  },
+
+  /* ——— Snacking salé (vitrine) ——— */
+  {
+    id: "part-pizza",
+    nom: "Part de pizza",
+    description: "Margherita, reine ou chorizo, selon la fournée du jour.",
+    prix: 320,
+    categorie: "snacking",
+    populaire: true,
+    allergenes: ["Gluten", "Lait"],
+  },
+  {
+    id: "sandwich-jambon-beurre",
+    nom: "Jambon-beurre",
+    description: "Baguette tradition, beurre doux, jambon blanc.",
+    prix: 420,
+    categorie: "snacking",
+    allergenes: ["Gluten", "Lait"],
+  },
+  {
+    id: "panini",
+    nom: "Panini",
+    description: "Jambon-fromage ou poulet-crudités, passé au grill.",
+    prix: 450,
+    categorie: "snacking",
+    allergenes: ["Gluten", "Lait"],
+  },
+  {
+    id: "quiche",
+    nom: "Part de quiche lorraine",
+    description: "Pâte brisée maison, lardons, crème, œufs.",
+    prix: 380,
+    categorie: "snacking",
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+
+  /* ——— Viennoiseries & pains (vitrine) ——— */
+  {
+    id: "pain-au-chocolat",
+    nom: "Pain au chocolat",
+    description: "Pur beurre, deux barres de chocolat noir.",
+    prix: 130,
+    categorie: "viennoiseries",
+    populaire: true,
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+  {
+    id: "croissant",
+    nom: "Croissant",
+    description: "Pur beurre, feuilletage maison.",
+    prix: 120,
+    categorie: "viennoiseries",
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+  {
+    id: "pain-aux-raisins",
+    nom: "Pain aux raisins",
+    description: "Crème pâtissière et raisins macérés.",
+    prix: 150,
+    categorie: "viennoiseries",
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+  {
+    id: "baguette",
+    nom: "Baguette tradition",
+    description: "Pétrie et cuite sur place, plusieurs fournées par jour.",
+    prix: 130,
+    categorie: "viennoiseries",
+    allergenes: ["Gluten"],
+  },
+
+  /* ——— Pâtisseries (vitrine) ——— */
+  {
+    id: "eclair",
+    nom: "Éclair au chocolat",
+    description: "Pâte à choux, crème pâtissière au chocolat noir.",
+    prix: 250,
+    categorie: "patisseries",
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+  {
+    id: "flan",
+    nom: "Part de flan",
+    description: "Vanille de Madagascar, cuisson longue.",
+    prix: 220,
+    categorie: "patisseries",
+    allergenes: ["Gluten", "Lait", "Œuf"],
+  },
+  {
+    id: "cookie",
+    nom: "Cookie",
+    description: "Pépites de chocolat, cuit le matin même.",
+    prix: 150,
+    categorie: "patisseries",
+    populaire: true,
+    allergenes: ["Gluten", "Lait", "Œuf"],
   },
 ];
 
 export const CATALOGUE = new Map(PRODUITS.map((p) => [p.id, p]));
+
+const COMMANDABLES = new Set(
+  CATEGORIES.filter((c) => c.commandable).map((c) => c.id as CategorieId),
+);
+
+/** Un produit de vitrine se consulte en ligne mais s'achète au comptoir. */
+export function estCommandable(produit: Produit): boolean {
+  return COMMANDABLES.has(produit.categorie) && !produit.epuise;
+}
+
+/** Une commande doit contenir au moins un menu ou un plat. */
+export function estPrincipal(produit: Produit): boolean {
+  return CATEGORIES_PRINCIPALES.includes(produit.categorie);
+}
 
 export function produitsParCategorie(categorie: CategorieId): Produit[] {
   return PRODUITS.filter((p) => p.categorie === categorie);

@@ -8,7 +8,6 @@ import { Logo } from "@/components/logo";
 
 const LIENS = [
   { href: "/carte", libelle: "La carte" },
-  { href: "/traiteur", libelle: "Traiteur" },
   { href: "/a-propos", libelle: "La maison" },
   { href: "/contact", libelle: "Contact" },
 ];

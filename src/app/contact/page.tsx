@@ -63,9 +63,11 @@ export default function Contact() {
 
           <div className="perfore rounded-ticket border border-creme/12 bg-encre/50 p-6">
             <p className="text-sm leading-relaxed text-creme-doux">
-              Pour une commande du jour, le téléphone reste le plus rapide —
-              nous décrochons entre les services. Pour un devis traiteur,
-              utilisez plutôt le formulaire dédié.
+              Pour réserver un repas, passez plutôt par{" "}
+              <span className="text-creme">la carte</span> : c&apos;est immédiat
+              et vous choisissez votre créneau. Le téléphone reste le plus
+              rapide pour une question sur une commande en cours — nous
+              décrochons entre les coups de feu.
             </p>
           </div>
         </Reveal>
@@ -73,7 +75,7 @@ export default function Contact() {
         <Reveal delai={120}>
           <div className="rounded-ticket border border-creme/12 bg-encre/50 p-7 sm:p-9">
             <h2 className="mb-8 font-display text-2xl text-creme">Un message ?</h2>
-            <FormulaireContact sujet="contact" />
+            <FormulaireContact />
           </div>
         </Reveal>
       </div>

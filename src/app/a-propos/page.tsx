@@ -12,26 +12,28 @@ export const metadata: Metadata = {
 const REPERES = [
   {
     annee: "2019",
-    titre: "Le comptoir ouvre",
-    texte: "Douze couverts, une carte au tableau noir, et déjà la règle du fait-maison.",
+    titre: "La boulangerie ouvre",
+    texte: "Le fournil, la vitrine, et une file qui déborde sur le trottoir dès la récréation.",
   },
   {
-    annee: "2021",
-    titre: "Le service traiteur",
-    texte: "Les clients du midi demandent des buffets pour leurs bureaux. On dit oui.",
+    annee: "2022",
+    titre: "La restauration du midi",
+    texte:
+      "Burgers et plats du jour arrivent à la carte, pour ceux qui veulent autre chose qu'un sandwich.",
   },
   {
-    annee: "2023",
-    titre: "La commande en ligne",
-    texte: "Pour supprimer la file du midi sans jamais préparer les plats à l'avance.",
+    annee: "2024",
+    titre: "La réservation en ligne",
+    texte:
+      "Pour que les profs et le personnel puissent déjeuner sans passer leur pause entière dans la file.",
   },
 ];
 
 const PRINCIPES = [
-  { t: "Rien de congelé", d: "Pas de surgelé, pas de sous-vide industriel, pas de sauce en poudre." },
-  { t: "Trente kilomètres", d: "L'essentiel des produits vient de producteurs à moins de 30 km." },
-  { t: "Carte courte", d: "Six plats maximum par service : c'est ce qui permet de tout faire soi-même." },
-  { t: "Prix lisibles", d: "Service compris, pas de supplément caché à la caisse." },
+  { t: "Cuit sur place", d: "Le pain, les viennoiseries et les pâtisseries sortent de notre fournil." },
+  { t: "Plusieurs fournées", d: "Le matin, avant la récréation et avant la sortie des cours." },
+  { t: "Rien de congelé", d: "Pas de sauce en poudre, pas de plat réchauffé sous une lampe." },
+  { t: "Prix lisibles", d: "Affichés en vitrine comme en ligne, sans supplément à la caisse." },
 ];
 
 export default function APropos() {
@@ -40,28 +42,28 @@ export default function APropos() {
       <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
         <p className="sur-titre animate-rise">Depuis {RESTAURANT.fondation}</p>
         <h1 className="animate-veil mt-6 max-w-[15ch] text-[clamp(2.6rem,8vw,6rem)] leading-[0.9]">
-          Une petite maison de <span className="text-beurre italic">cuisine</span>.
+          La boulangerie d&apos;en <span className="text-beurre italic">face</span>.
         </h1>
       </section>
 
       <section className="mx-auto grid max-w-[1240px] gap-12 px-5 pb-20 sm:px-8 lg:grid-cols-[1fr_0.85fr]">
         <Reveal className="flex flex-col gap-5 text-lg leading-relaxed text-creme-doux">
           <p>
-            {RESTAURANT.nom} est née d&apos;un constat banal : entre le sandwich
-            sous plastique et le restaurant à une heure et demie, il ne restait
-            rien pour déjeuner correctement quand on a quarante minutes devant
-            soi.
+            {RESTAURANT.nom}, c&apos;est la boulangerie en face du lycée. Le
+            fournil tourne dès six heures et demie, la vitrine se remplit avant
+            la première récréation, et à midi la cuisine prend le relais avec
+            les burgers et le plat du jour.
           </p>
           <p>
-            Nous avons donc construit l&apos;inverse d&apos;une chaîne. Une carte
-            courte, écrite chaque matin après le marché. Une cuisine ouverte sur
-            la salle, parce qu&apos;on n&apos;a rien à cacher. Et une promesse
-            simple : votre commande part en cuisine au moment où vous la passez,
-            pas trois heures avant.
+            Le problème, on le voit tous les jours : à midi, la file sort sur le
+            trottoir. Un élève a dix minutes, un professeur en a quarante. La
+            réservation en ligne est née de là — vous commandez votre repas, on
+            le prépare pour l&apos;heure que vous avez choisie, vous n&apos;avez
+            plus qu&apos;à passer le prendre.
           </p>
           <p className="text-creme">
-            Aucune assiette ne sort d&apos;ici sans avoir été cuisinée le jour
-            même, à {RESTAURANT.adresse}.
+            La viennoiserie et le snacking, eux, restent au comptoir : c&apos;est
+            là qu&apos;ils sont les meilleurs, chauds et tout juste sortis du four.
           </p>
         </Reveal>
 

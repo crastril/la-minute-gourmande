@@ -4,53 +4,58 @@ import { Reveal } from "@/components/reveal";
 import { produitsDuJour } from "@/data/menu";
 import { RESTAURANT } from "@/data/restaurant";
 
+/**
+ * ⚠️ Textes de démonstration : structure validée, formulations à faire
+ * relire par le client avant mise en ligne.
+ */
+
 const ETAPES = [
   {
     numero: "01",
-    titre: "Vous commandez",
+    titre: "Vous réservez",
     texte:
-      "La carte change chaque matin selon le marché. Vous choisissez, vous payez en ligne, c'est réglé.",
+      "Menus et plats du midi se commandent en ligne, jusqu'au matin même. Vous choisissez l'heure à laquelle vous passez.",
   },
   {
     numero: "02",
-    titre: "On cuisine",
+    titre: "On prépare",
     texte:
-      "Rien n'est préparé à l'avance : votre commande part en cuisine dès qu'elle tombe sur le passe.",
+      "Tout est fait sur place : le pain le matin, les plats à l'heure de votre créneau. Rien n'attend sous une lampe.",
   },
   {
     numero: "03",
     titre: "Vous récupérez",
-    texte: `Quinze minutes plus tard, votre nom est sur le comptoir. Pas de file, pas d'attente.`,
+    texte:
+      "Votre nom est sur le comptoir à l'heure dite. Vous passez devant la file, vous repartez.",
   },
 ];
 
 const TEMOIGNAGES = [
   {
     citation:
-      "Le seul endroit du quartier où je peux déjeuner correctement en vingt minutes montre en main.",
-    auteur: "Camille R.",
-    role: "Habituée du mardi",
+      "Quarante minutes de pause et cent cinquante élèves devant moi : sans la réservation, je ne déjeunais jamais.",
+    auteur: "Nathalie",
+    role: "Professeure au lycée",
   },
   {
-    citation:
-      "On leur a confié le buffet des 40 ans de l'agence. Quarante-cinq couverts, zéro fausse note.",
-    auteur: "Thomas B.",
-    role: "Client traiteur",
+    citation: "Les parts de pizza à la sortie des cours, c'est une institution ici.",
+    auteur: "Yanis",
+    role: "Terminale",
   },
   {
-    citation: "La blanquette est exactement celle de ma grand-mère. Je ne dis jamais ça.",
-    auteur: "Sofia M.",
-    role: "Cliente depuis 2021",
+    citation: "On commande à huit pour la salle des profs, tout est prêt et étiqueté à 12h15.",
+    auteur: "Marc",
+    role: "Habitué du vendredi",
   },
 ];
 
 const DEFILEMENT = [
-  "Fait maison",
-  "Produits de saison",
-  "Circuit court",
-  "Prêt en 15 minutes",
-  "Zéro conservateur",
-  "Cuisine ouverte",
+  "Cuit sur place",
+  "Viennoiseries pur beurre",
+  "Menus du midi",
+  "Sans file d'attente",
+  "En face du lycée",
+  "Réservation en ligne",
 ];
 
 export default function Accueil() {
@@ -82,30 +87,30 @@ export default function Accueil() {
 
         <div className="mx-auto max-w-[1240px] px-5 pt-16 pb-24 sm:px-8 sm:pt-24 lg:pt-28">
           <p className="sur-titre animate-rise">
-            {RESTAURANT.ville} · Traiteur & cuisine du jour
+            {RESTAURANT.ville} · Boulangerie & restauration
           </p>
 
           <h1 className="mt-7 max-w-[16ch] text-[clamp(2.9rem,9.5vw,7.5rem)] leading-[0.88]">
-            <span className="animate-veil block">Le fait-maison,</span>
+            <span className="animate-veil block">Commandez le matin,</span>
             <span
               className="animate-veil block pl-[0.08em] text-beurre italic"
               style={{ animationDelay: "160ms" }}
             >
-              à la minute.
+              mangez à midi.
             </span>
           </h1>
 
           <div className="mt-12 grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-end">
             <p
-              className="animate-rise max-w-[46ch] text-lg leading-relaxed text-creme-doux"
+              className="animate-rise max-w-[48ch] text-lg leading-relaxed text-creme-doux"
               style={{ animationDelay: "320ms" }}
             >
-              Une petite maison de cuisine qui prépare tout le matin même, achète
-              à trente kilomètres à la ronde, et vous rend votre déjeuner chaud{" "}
+              La boulangerie en face du lycée. Viennoiseries, parts de pizza et
+              sandwichs au comptoir toute la journée — et, pour le midi,{" "}
               <span className="text-creme">
-                {RESTAURANT.delaiRetrait} minutes après votre commande
-              </span>
-              . Rien de congelé, rien de réchauffé.
+                des menus et des plats à réserver en ligne
+              </span>{" "}
+              que vous récupérez à l&apos;heure que vous avez choisie.
             </p>
 
             <div
@@ -116,14 +121,14 @@ export default function Accueil() {
                 href="/carte"
                 className="group relative overflow-hidden rounded-ticket bg-beurre px-7 py-4 text-sm font-medium text-noir transition-colors duration-300 hover:bg-beurre-clair"
               >
-                Commander maintenant
+                Réserver mon déjeuner
                 <span className="chiffres ml-3 text-[0.7rem] opacity-70">→</span>
               </Link>
               <Link
-                href="/traiteur"
+                href="/carte#viennoiseries"
                 className="rounded-ticket border border-creme/20 px-7 py-4 text-sm text-creme transition-colors duration-300 hover:border-beurre/60 hover:text-beurre-clair"
               >
-                Devis traiteur
+                Voir la vitrine
               </Link>
             </div>
           </div>
@@ -134,10 +139,10 @@ export default function Accueil() {
             style={{ animationDelay: "560ms" }}
           >
             {[
-              { cle: "Retrait", valeur: `${RESTAURANT.delaiRetrait} min` },
-              { cle: "Carte", valeur: "Renouvelée chaque jour" },
-              { cle: "Formule", valeur: "dès 13,50 €" },
-              { cle: "Traiteur", valeur: "jusqu'à 120 couverts" },
+              { cle: "Retrait", valeur: "11h30 — 13h30" },
+              { cle: "Préparation", valeur: `${RESTAURANT.delaiRetrait} min` },
+              { cle: "Menus", valeur: "dès 8,90 €" },
+              { cle: "Règlement", valeur: "en ligne ou sur place" },
             ].map((item) => (
               <div key={item.cle} className="bg-noir px-5 py-6">
                 <p className="chiffres text-[0.6rem] tracking-[0.2em] text-creme-tres-doux uppercase">
@@ -168,9 +173,9 @@ export default function Accueil() {
       {/* ——— Le service en trois gestes ——— */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
         <Reveal>
-          <p className="sur-titre">Comment ça marche</p>
+          <p className="sur-titre">La réservation du midi</p>
           <h2 className="mt-4 max-w-[18ch] text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-            Trois gestes, <span className="text-beurre italic">quinze minutes</span>.
+            Trois gestes, <span className="text-beurre italic">zéro file</span>.
           </h2>
         </Reveal>
 
@@ -189,13 +194,13 @@ export default function Accueil() {
         </ol>
       </section>
 
-      {/* ——— La carte du jour ——— */}
+      {/* ——— À réserver aujourd'hui ——— */}
       <section className="mx-auto max-w-[1240px] px-5 pb-24 sm:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="sur-titre">Aujourd&apos;hui au passe</p>
+            <p className="sur-titre">Pour le midi</p>
             <h2 className="mt-4 text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-              La carte du jour
+              À réserver aujourd&apos;hui
             </h2>
           </div>
           <Link
@@ -216,25 +221,26 @@ export default function Accueil() {
         </div>
       </section>
 
-      {/* ——— Traiteur ——— */}
+      {/* ——— La vitrine, au comptoir ——— */}
       <section className="filet relative overflow-hidden bg-encre/50">
         <div className="mx-auto grid max-w-[1240px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
           <Reveal>
-            <p className="sur-titre">Événements</p>
+            <p className="sur-titre">Sans réservation</p>
             <h2 className="mt-4 text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-              On déplace la cuisine
-              <span className="block text-pistache italic">chez vous.</span>
+              La vitrine,
+              <span className="block text-pistache italic">toute la journée.</span>
             </h2>
             <p className="mt-6 max-w-[48ch] leading-relaxed text-creme-doux">
-              Anniversaires, séminaires, mariages, pots de départ : nous
-              construisons un menu sur mesure, dressé sur place, avec le même
-              principe qu&apos;au comptoir — tout est préparé le jour même.
+              Viennoiseries pur beurre, parts de pizza, sandwichs, pâtisseries :
+              tout ça se prend directement au comptoir, sans commander à
+              l&apos;avance. Plusieurs fournées par jour, y compris pour la
+              sortie des cours.
             </p>
             <dl className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-3">
               {[
-                { t: "10 à 120", d: "couverts" },
-                { t: "72 h", d: "de délai minimum" },
-                { t: "Sur mesure", d: "menus & régimes" },
+                { t: "06h30", d: "première fournée" },
+                { t: "Dès 1,20 €", d: "la viennoiserie" },
+                { t: "Sur place", d: "pain, snacking, pâtisserie" },
               ].map((stat) => (
                 <div key={stat.t}>
                   <dt className="font-display text-2xl text-creme">{stat.t}</dt>
@@ -245,10 +251,10 @@ export default function Accueil() {
               ))}
             </dl>
             <Link
-              href="/traiteur"
+              href="/carte#viennoiseries"
               className="mt-10 inline-block rounded-ticket border border-pistache/45 px-7 py-4 text-sm text-pistache transition-colors duration-300 hover:bg-pistache hover:text-noir"
             >
-              Demander un devis
+              Découvrir la vitrine
             </Link>
           </Reveal>
 
@@ -318,7 +324,7 @@ export default function Accueil() {
       <section className="mx-auto max-w-[1240px] px-5 sm:px-8">
         <Reveal>
           <div className="perfore relative overflow-hidden rounded-ticket border border-beurre/25 bg-gradient-to-br from-beurre/12 to-transparent px-8 py-16 text-center sm:px-16">
-            <p className="sur-titre">Le service du midi ouvre à 11h30</p>
+            <p className="sur-titre">Retraits de 11h30 à 13h30</p>
             <h2 className="mx-auto mt-5 max-w-[16ch] text-[clamp(2rem,5vw,3.6rem)] leading-[1.02]">
               Votre déjeuner vous attend.
             </h2>

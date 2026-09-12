@@ -29,26 +29,27 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(RESTAURANT.url),
   title: {
-    default: `${RESTAURANT.nom} — Traiteur & cuisine du jour à ${RESTAURANT.ville}`,
+    default: `${RESTAURANT.nom} — Boulangerie & restauration à ${RESTAURANT.ville}`,
     template: `%s · ${RESTAURANT.nom}`,
   },
   description:
-    "Cuisine maison préparée chaque matin, commande en ligne et retrait en 15 minutes. Plats du jour, formules déjeuner et service traiteur pour vos événements.",
+    "Boulangerie artisanale et restauration du midi. Viennoiseries et snacking au comptoir, menus et plats à réserver en ligne pour un retrait entre 11h30 et 13h30.",
   keywords: [
-    "traiteur",
+    "boulangerie",
     RESTAURANT.ville,
     "plat du jour",
     "click and collect",
-    "cuisine maison",
+    "viennoiserie",
+    "burger",
     "commande en ligne",
   ],
   openGraph: {
     type: "website",
     locale: "fr_FR",
     siteName: RESTAURANT.nom,
-    title: `${RESTAURANT.nom} — le fait-maison, à la minute`,
+    title: `${RESTAURANT.nom} — commandez le matin, mangez à midi`,
     description:
-      "Commandez votre déjeuner en ligne, récupérez-le chaud 15 minutes plus tard.",
+      "Réservez votre déjeuner en ligne et récupérez-le à l'heure que vous avez choisie, sans faire la file.",
   },
   robots: { index: true, follow: true },
 };

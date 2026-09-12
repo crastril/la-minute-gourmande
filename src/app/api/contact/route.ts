@@ -2,15 +2,10 @@ import { NextResponse } from "next/server";
 import { RESTAURANT } from "@/data/restaurant";
 
 type Corps = {
-  sujet?: "contact" | "traiteur";
   nom?: string;
   email?: string;
   telephone?: string;
   message?: string;
-  /** Champs spécifiques au devis traiteur. */
-  convives?: string;
-  date?: string;
-  typeEvenement?: string;
   /** Pot de miel anti-robot : rempli = requête ignorée. */
   societe?: string;
 };
@@ -43,18 +38,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ erreur: "Cette adresse e-mail semble invalide." }, { status: 400 });
   }
 
-  const sujet =
-    corps.sujet === "traiteur"
-      ? `Demande de devis traiteur — ${nom}`
-      : `Message du site — ${nom}`;
+  const sujet = `Message du site — ${nom}`;
 
   const corpsTexte = [
     `Nom : ${nom}`,
     `E-mail : ${email}`,
     corps.telephone ? `Téléphone : ${corps.telephone}` : null,
-    corps.typeEvenement ? `Type d'événement : ${corps.typeEvenement}` : null,
-    corps.convives ? `Nombre de convives : ${corps.convives}` : null,
-    corps.date ? `Date souhaitée : ${corps.date}` : null,
     "",
     message.slice(0, 4000),
   ]

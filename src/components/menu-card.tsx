@@ -1,6 +1,6 @@
 import { AddToCart } from "@/components/add-to-cart";
 import { DishVisual } from "@/components/dish-visual";
-import type { Produit } from "@/data/menu";
+import { estCommandable, type Produit } from "@/data/menu";
 import { prix } from "@/lib/format";
 
 export function MenuCard({ produit }: { produit: Produit }) {
@@ -41,7 +41,13 @@ export function MenuCard({ produit }: { produit: Produit }) {
         )}
 
         <div className="mt-auto pt-2">
-          <AddToCart produit={produit} />
+          {estCommandable(produit) ? (
+            <AddToCart produit={produit} />
+          ) : (
+            <span className="chiffres inline-block rounded-ticket border border-creme/10 px-3 py-2 text-[0.65rem] tracking-[0.14em] text-creme-tres-doux uppercase">
+              {produit.epuise ? "Épuisé" : "Au comptoir"}
+            </span>
+          )}
         </div>
       </div>
     </article>
