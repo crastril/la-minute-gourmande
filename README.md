@@ -82,11 +82,31 @@ Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans 
 
 ## Paiement en ligne
 
-1. Récupérer les clés sur https://dashboard.stripe.com/apikeys
-2. Renseigner `STRIPE_SECRET_KEY` dans `.env.local` (et dans Vercel)
-3. La commande redirige alors vers Stripe Checkout ; le retour se fait sur `/commande/confirmee`
+Ce site est branché sur **un compte Stripe dédié**, celui de La Minute Gourmande, totalement séparé de tout autre projet. Aucun identifiant de compte n'est écrit dans le code : le compte utilisé découle uniquement de la valeur de `STRIPE_SECRET_KEY`, définie séparément en local (`.env.local`) et sur le projet Vercel de ce site.
 
-La référence de commande, le créneau, la note cuisine et le téléphone sont transmis en `metadata` de la session Stripe — visibles directement dans le dashboard.
+1. Le **client** crée son compte sur https://dashboard.stripe.com/register, à son nom et avec son RIB
+2. Il vous invite en *Developer* : Dashboard → Settings → Team
+3. Récupérer la clé sur https://dashboard.stripe.com/apikeys **en étant connecté sur son compte**
+4. Renseigner `STRIPE_SECRET_KEY` dans `.env.local`, puis dans Vercel
+5. **Vérifier le compte** : `npm run stripe:verifier`
+
+```
+  ── Compte Stripe branché sur ce site ──
+
+  Mode de la clé         LIVE (paiements réels)
+  Identifiant            acct_…
+  Nom commercial         La Minute Gourmande
+  Virements actifs       oui
+```
+
+C'est ce contrôle qui garantit qu'on n'encaisse pas les commandes de ce site sur le Stripe d'un autre projet.
+
+Deux garde-fous complètent la vérification, dans `src/lib/stripe.ts` :
+
+- une clé au format inattendu (clé publiable, valeur tronquée) est **refusée** — HTTP 503, et non un repli silencieux sur le règlement au comptoir, qui masquerait l'erreur ;
+- une clé `sk_live_` **hors production est refusée**, pour ne pas encaisser de vrais paiements pendant les tests.
+
+La référence de commande, le créneau, la note cuisine et le téléphone sont transmis en `metadata` de la session Stripe — visibles directement dans le dashboard du client.
 
 **Non implémenté à ce stade** (à décider avec le client) : webhook Stripe de confirmation, e-mail de confirmation au client, back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
 
