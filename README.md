@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# La Minute Gourmande
 
-## Getting Started
+Site vitrine + commande en ligne (click & collect) et demande de devis traiteur.
 
-First, run the development server:
+**Stack** — Next.js 16 (App Router, React Compiler, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Stripe Checkout · déploiement Vercel.
+
+---
+
+## Démarrer
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour développer** : sans `STRIPE_SECRET_KEY`, la commande bascule en « règlement au comptoir » ; sans `RESEND_API_KEY`, les formulaires s'écrivent dans les logs serveur.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Commande | Effet |
+| --- | --- |
+| `npm run dev` | Serveur de développement |
+| `npm run build` | Build de production |
+| `npm run lint` | ESLint (règles React Compiler incluses) |
+| `npx tsc --noEmit` | Vérification des types |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## ⚠️ Ce qui reste à brancher (contenu client)
 
-To learn more about Next.js, take a look at the following resources:
+Le code est terminé ; il attend les éléments réels. Tout est regroupé pour qu'une seule passe suffise :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| À fournir | Où ça se branche |
+| --- | --- |
+| **Logo** (SVG) | `src/components/logo.tsx` — voir `public/brand/LISEZ-MOI.md` |
+| **Charte** (couleurs, polices) | bloc `@theme` de `src/app/globals.css` + `src/app/layout.tsx` |
+| **Produits & prix** (flyers) | `src/data/menu.ts` — le reste du site lit uniquement ce fichier |
+| **Photos des plats** | `public/photos/`, puis champ `image` de chaque produit |
+| **Coordonnées, horaires, créneaux** | `src/data/restaurant.ts` |
+| **Mentions légales** (SIRET, RCS, TVA…) | `src/app/mentions-legales/page.tsx` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Les textes actuels (accueil, traiteur, « la maison », témoignages) sont rédigés mais **fictifs** : à faire valider ou réécrire avec le client.
 
-## Deploy on Vercel
+Tant qu'aucune photo n'est fournie, chaque produit affiche une assiette générée en dégradé, stable et différente par produit — rien ne casse.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Architecture
+
+```
+src/
+  app/
+    page.tsx                    Accueil
+    carte/                      Carte complète, ancres par catégorie
+    panier/                     Récapitulatif + créneau + coordonnées
+    commande/confirmee/         Ticket de confirmation
+    traiteur/                   Prestations + formulaire de devis
+    a-propos/  contact/  mentions-legales/
+    api/checkout/route.ts       Création de la commande (Stripe ou comptoir)
+    api/contact/route.ts        Contact & devis (Resend ou logs)
+    sitemap.ts  robots.ts  not-found.tsx
+  components/
+    cart-provider.tsx           Panier (store externe + useSyncExternalStore)
+    site-header.tsx  site-footer.tsx  logo.tsx
+    menu-card.tsx  add-to-cart.tsx  dish-visual.tsx
+    panier-client.tsx  panier-flottant.tsx  vider-panier.tsx
+    formulaire-contact.tsx  reveal.tsx
+  data/
+    menu.ts                     Catalogue produits
+    restaurant.ts               Coordonnées, horaires, créneaux
+  lib/format.ts                 Prix en euros, référence de commande
+```
+
+### Panier
+
+Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans un `useState` + `useEffect`. Conséquences : pas de rendu en cascade à l'hydratation, et le panier reste synchronisé entre les onglets ouverts. Il est persisté dans `localStorage` sous la clé `lmg.panier.v1`, et purgé automatiquement des produits retirés de la carte.
+
+### Sécurité des prix
+
+`/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés et les quantités hors bornes (1 à 20), puis recalcule le montant côté serveur. Les formulaires publics sont protégés par un pot de miel anti-robot.
+
+---
+
+## Paiement en ligne
+
+1. Récupérer les clés sur https://dashboard.stripe.com/apikeys
+2. Renseigner `STRIPE_SECRET_KEY` dans `.env.local` (et dans Vercel)
+3. La commande redirige alors vers Stripe Checkout ; le retour se fait sur `/commande/confirmee`
+
+La référence de commande, le créneau, la note cuisine et le téléphone sont transmis en `metadata` de la session Stripe — visibles directement dans le dashboard.
+
+**Non implémenté à ce stade** (à décider avec le client) : webhook Stripe de confirmation, e-mail de confirmation au client, back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
+
+---
+
+## Déploiement
+
+```bash
+npx vercel
+```
+
+Variables à créer côté Vercel : `NEXT_PUBLIC_SITE_URL` (URL de production), `STRIPE_SECRET_KEY`, et si besoin `RESEND_API_KEY` / `CONTACT_EMAIL` / `CONTACT_FROM`.
