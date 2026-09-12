@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { CATALOGUE } from "@/data/menu";
 import { CRENEAUX, RESTAURANT } from "@/data/restaurant";
 import { numeroCommande } from "@/lib/format";
+import { resoudreCleStripe } from "@/lib/stripe";
 
 type Corps = {
   lignes?: { id: string; quantite: number }[];
@@ -66,11 +67,21 @@ export async function POST(req: Request) {
 
   const reference = numeroCommande();
   const total = articles.reduce((n, a) => n + a.produit.prix * a.quantite, 0);
-  const cle = process.env.STRIPE_SECRET_KEY;
+  const cleStripe = resoudreCleStripe();
+
+  // Clé présente mais inutilisable : on ne bascule pas silencieusement sur le
+  // règlement au comptoir, ce serait masquer une erreur de configuration.
+  if (cleStripe.etat === "refusee") {
+    console.error(`[checkout] configuration Stripe invalide — ${cleStripe.raison}`);
+    return NextResponse.json(
+      { erreur: "Le paiement est momentanément indisponible. Réessayez ou appelez-nous." },
+      { status: 503 },
+    );
+  }
 
   // Mode sans paiement : tant que les clés Stripe du client ne sont pas
   // renseignées, la commande est enregistrée et réglée sur place au retrait.
-  if (!cle) {
+  if (cleStripe.etat === "absente") {
     console.info(
       `[commande ${reference}] ${articles.length} article(s), ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""}`,
     );
@@ -81,7 +92,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const stripe = new Stripe(cle);
+    const stripe = new Stripe(cleStripe.cle);
     const base = origine(req);
 
     const session = await stripe.checkout.sessions.create({
