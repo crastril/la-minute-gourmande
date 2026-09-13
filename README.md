@@ -1,6 +1,6 @@
 # Minute Gourmande FWI
 
-Sandwicherie, pâtisserie et restauration rapide au François (Martinique), en face d'un lycée. Le site sert de vitrine à l'ensemble des produits, et permet de réserver en ligne les repas du midi (click & collect).
+Sandwicherie, pâtisserie et restauration rapide au François (Martinique), en face d'un lycée. Le site sert de vitrine à l'ensemble des produits, et permet de réserver en ligne les repas du midi (click & collect), réglés sur le site ou au retrait.
 
 **Version de validation** : https://la-minute-gourmande.vercel.app (non indexée par les moteurs de recherche).
 
@@ -43,9 +43,7 @@ Toutes appliquées par `/api/checkout`, et pas seulement dans l'interface :
 3. le créneau doit appartenir à la liste du midi (11h30 → 13h30) ;
 4. la composition d'un menu est revérifiée (plat et dessert doivent figurer dans le menu) et son prix recalculé.
 
-Le client choisit ensuite son règlement : **en ligne** (Stripe Checkout) ou **au retrait**. Sans clé Stripe configurée, l'option « payer maintenant » est affichée comme bientôt disponible et seul le règlement au retrait est possible.
-
-**Stack** : Next.js 16 (App Router, React Compiler, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Stripe Checkout · déploiement Vercel.
+**Stack** : Next.js 16 (App Router, React Compiler, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Stripe (Checkout Sessions + Payment Element) · Resend · déploiement Vercel.
 
 ---
 
@@ -57,7 +55,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour développer** : sans `STRIPE_SECRET_KEY`, la commande bascule en « règlement au comptoir » ; sans `RESEND_API_KEY`, les formulaires s'écrivent dans les logs serveur.
+Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour développer** : sans clés Stripe, la commande bascule en « règlement au retrait » ; sans `RESEND_API_KEY`, les e-mails (commandes, contact) s'écrivent dans les logs serveur.
 
 | Commande | Effet |
 | --- | --- |
@@ -65,7 +63,7 @@ Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour d
 | `npm run build` | Build de production |
 | `npm run lint` | ESLint (règles React Compiler incluses) |
 | `npx tsc --noEmit` | Vérification des types |
-| `npm run stripe:verifier` | Affiche le compte Stripe réellement branché |
+| `npm run stripe:verifier` | Affiche le compte Stripe réellement branché et contrôle la configuration |
 
 ---
 
@@ -76,11 +74,11 @@ Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour d
 | À fournir | Où ça se branche |
 | --- | --- |
 | **Prix des menus** (ce que la boisson incluse ajoute au prix du plat) | `src/data/menu.ts`, champ `supplementMenu` du `menu-du-midi` |
+| **CGV et mentions légales complètes** (obligatoires pour vendre en ligne) | `src/app/mentions-legales/page.tsx`, page CGV à créer |
 | **Allergènes** (information obligatoire en restauration) | `src/data/menu.ts`, champ `allergenes` de chaque produit |
 | **Photos et descriptions** des plats | `public/photos/` puis champs `image` et `description` |
 | **Horaires d'ouverture** | `src/data/restaurant.ts` |
 | **Domaine du site** | `src/data/restaurant.ts` (`url`) et `NEXT_PUBLIC_SITE_URL` |
-| **Mentions légales** (SIRET, RCS, TVA…) | `src/app/mentions-legales/page.tsx` |
 | **Logo vectoriel** (optionnel) | `public/brand/`, le logo actuel est une image extraite du PDF |
 
 Lectures du menu imprimé **à faire confirmer** par le client :
@@ -101,16 +99,18 @@ src/
   app/
     page.tsx                    Accueil
     carte/                      Carte complète, ancres par catégorie
-    panier/                     Récapitulatif + créneau + règlement
-    commande/confirmee/         Ticket de confirmation
+    panier/                     Récapitulatif + créneau + règlement + paiement intégré
+    commande/confirmee/         Confirmation (paiement revérifié auprès de Stripe)
     a-propos/  contact/  mentions-legales/
-    api/checkout/route.ts       Création de la commande (Stripe ou comptoir)
+    api/checkout/route.ts       Création de la commande (session Stripe ou e-mail au retrait)
+    api/stripe/webhook/route.ts Webhook Stripe : commande payée → e-mail à la boutique
     api/contact/route.ts        Contact (Resend ou logs)
     sitemap.ts  robots.ts  not-found.tsx
     icon.png  apple-icon.png  favicon.ico  opengraph-image.png
   components/
     cart-provider.tsx           Panier (store externe + useSyncExternalStore)
     composer-menu.tsx           Fenêtre de composition d'un menu (<dialog>)
+    paiement-integre.tsx        Champs de paiement Stripe aux couleurs du site + Link
     site-header.tsx  site-footer.tsx  logo.tsx
     menu-card.tsx               Produit en carte illustrée ou en ligne de prix
     add-to-cart.tsx  dish-visual.tsx
@@ -121,8 +121,10 @@ src/
     menu.ts                     Catalogue, menus à composer, prix et validation
     restaurant.ts               Coordonnées, horaires, créneaux du midi
   lib/
+    commande.ts                 Récapitulatif de commande (texte et HTML de l'e-mail)
+    email.ts                    Envoi d'e-mail via Resend (ou logs)
     format.ts                   Prix en euros, référence de commande
-    stripe.ts                   Résolution et garde-fous de la clé Stripe
+    stripe.ts                   Résolution et garde-fous des clés Stripe
     site.ts                     URL publique, autorisation d'indexation
 public/brand/                   Logo et fiche d'identité visuelle
 scripts/
@@ -135,41 +137,67 @@ Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans 
 
 ### Sécurité des prix
 
-`/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés, les quantités hors bornes (1 à 20) et les compositions de menu invalides, puis recalcule le montant côté serveur. Les formulaires publics sont protégés par un pot de miel anti-robot.
-
-La composition des menus figure dans la description de chaque ligne Stripe et dans le journal serveur, par exemple : `2× Menu du midi (Poulet frites · boisson incluse · Magnum)`.
+`/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés, les quantités hors bornes (1 à 20) et les compositions de menu invalides, puis recalcule le montant côté serveur. Tous les champs saisis sont nettoyés et bornés ; ils sont échappés avant d'être insérés dans l'e-mail. Les formulaires publics sont protégés par un pot de miel anti-robot.
 
 ---
 
 ## Paiement en ligne
 
-Ce site est branché sur **un compte Stripe dédié**, celui de Minute Gourmande, totalement séparé de tout autre projet. Aucun identifiant de compte n'est écrit dans le code : le compte utilisé découle uniquement de la valeur de `STRIPE_SECRET_KEY`, définie séparément en local (`.env.local`) et sur le projet Vercel de ce site.
+### Paiement intégré au site
 
-1. Le **client** crée son compte sur https://dashboard.stripe.com/register, à son nom et avec son RIB
-2. Il vous invite en *Developer* : Dashboard → Settings → Team
-3. Récupérer la clé sur https://dashboard.stripe.com/apikeys **en étant connecté sur son compte**
-4. Renseigner `STRIPE_SECRET_KEY` dans `.env.local`, puis dans Vercel
-5. **Vérifier le compte** : `npm run stripe:verifier`
+Le paiement se fait **sur le site, sans redirection** : Stripe Checkout Sessions en `ui_mode: "elements"`, avec le Payment Element.
 
-```
-  ── Compte Stripe branché sur ce site ──
+- les champs de carte sont des iframes Stripe : **les données bancaires ne touchent jamais notre serveur** ;
+- **Link** : le champ e-mail (Contact Details Element) reconnaît les clients inscrits, qui retrouvent leur carte après un code de vérification ;
+- **3D Secure** est géré par Stripe ;
+- les champs reprennent la charte (crème, encre, orange, police Barlow) ;
+- Apple Pay et Google Pay s'affichent quand ils sont activés et que le domaine est enregistré chez Stripe.
 
-  Mode de la clé         LIVE (paiements réels)
-  Identifiant            acct_…
-  Nom commercial         Minute Gourmande
-  Virements actifs       oui
-```
+### Déroulé d'une commande payée en ligne
 
-C'est ce contrôle qui garantit qu'on n'encaisse pas les commandes de ce site sur le Stripe d'un autre projet.
+1. Le client remplit le retrait et choisit « Payer maintenant ».
+2. `/api/checkout` recalcule le montant et crée une session Stripe ; le navigateur reçoit son `client_secret`.
+3. Le panier est figé et les champs de paiement remplacent le formulaire.
+4. Après validation, Stripe renvoie vers `/commande/confirmee?session_id=…`. La page **relit la session chez Stripe** : un identifiant recopié ou inventé n'affiche jamais « payé ».
+5. Stripe envoie l'événement `checkout.session.completed` à `/api/stripe/webhook`, qui vérifie la signature et **envoie l'e-mail de commande à la boutique**. C'est la seule source fiable : elle fonctionne même si le client ferme l'onglet.
 
-Deux garde-fous complètent la vérification, dans `src/lib/stripe.ts` :
+Une commande **à régler au retrait** envoie l'e-mail immédiatement. Si l'envoi échoue, le client en est averti plutôt que de recevoir une confirmation que personne ne lirait. Côté webhook, un échec renvoie une erreur à Stripe, qui réessaie plus tard : un e-mail peut arriver en double, une commande ne peut pas être perdue.
 
-- une clé au format inattendu (clé publiable, valeur tronquée) est **refusée** : HTTP 503, et non un repli silencieux sur le règlement au comptoir, qui masquerait l'erreur ;
-- une clé `sk_live_` **hors production est refusée**, pour ne pas encaisser de vrais paiements pendant les tests.
+### Un compte Stripe dédié
 
-La référence de commande, le créneau, la note cuisine et le téléphone sont transmis en `metadata` de la session Stripe, visibles directement dans le dashboard du client.
+Le site est branché sur **le compte Stripe de Minute Gourmande**, séparé de tout autre projet. Aucun identifiant de compte n'est écrit dans le code : le compte utilisé découle uniquement des variables d'environnement.
 
-**Non implémenté à ce stade** (à décider avec le client) : webhook Stripe de confirmation, e-mail de confirmation au client, back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
+Garde-fous de `src/lib/stripe.ts`, qui désactivent le paiement en ligne plutôt que de le laisser échouer chez le client :
+
+- clé secrète ou publique au format inattendu ;
+- clé `sk_live_` hors production (pas de vrai débit pendant les tests) ;
+- clé publique manquante ;
+- clé publique et clé secrète de **modes différents** (test / live).
+
+`npm run stripe:verifier` affiche le compte réellement branché et contrôle la configuration locale.
+
+### Tester en local
+
+Dans `.env.local` : `STRIPE_SECRET_KEY=sk_test_…` et `STRIPE_PUBLISHABLE_KEY=pk_test_…` du même compte. Cartes de test Stripe : `4242 4242 4242 4242` (paiement accepté), `4000 0027 6000 3184` (validation 3D Secure demandée), n'importe quelle date future et n'importe quel CVC.
+
+### Passage en production
+
+À faire dans cet ordre, **avant** d'annoncer le paiement en ligne :
+
+1. **Activer le compte Stripe** : vérification d'identité terminée et RIB renseigné (`npm run stripe:verifier` doit afficher « Encaissements actifs : oui »).
+2. **Publier les CGV et des mentions légales complètes** : obligatoires pour vendre en ligne, et contrôlées par Stripe.
+3. **Créer le webhook live** dans Stripe → Développeurs → Webhooks :
+   - URL : `https://la-minute-gourmande.vercel.app/api/stripe/webhook` (puis le domaine définitif) ;
+   - événements : `checkout.session.completed` et `checkout.session.async_payment_succeeded` ;
+   - copier le secret de signature `whsec_…`.
+4. **Créer un compte Resend** avec l'adresse qui doit recevoir les commandes, et générer une clé API.
+5. **Renseigner les variables** dans Vercel → Settings → Environment Variables, en environnement *Production* : `STRIPE_SECRET_KEY` (`sk_live_…`), `STRIPE_PUBLISHABLE_KEY` (`pk_live_…`), `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `COMMANDES_EMAIL`.
+6. **Redéployer** : les variables d'environnement ne s'appliquent qu'au déploiement suivant.
+7. **Faire le ménage des moyens de paiement** dans Stripe → Paramètres → Moyens de paiement : garder carte, Link, Apple Pay et Google Pay ; désactiver ceux qui ne servent pas en Martinique (Bancontact, EPS, Klarna, MB Way, Satispay…).
+8. **Enregistrer le domaine** pour Apple Pay et Google Pay (Paramètres → Domaines des moyens de paiement).
+9. **Tester avec une vraie carte** sur une petite commande, vérifier la réception de l'e-mail, puis rembourser depuis le tableau de bord.
+
+**Non implémenté à ce stade** (à décider avec le client) : e-mail de confirmation au client (les reçus Stripe peuvent être activés dans les paramètres du compte), back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
 
 ---
 
@@ -182,15 +210,19 @@ vercel deploy --prod
 ```
 
 - **Lien à partager** : `https://la-minute-gourmande.vercel.app`. Les URL propres à chaque déploiement (`la-minute-gourmande-xxxx-….vercel.app`) sont protégées par l'authentification Vercel et ne s'ouvrent pas pour un visiteur.
-- **Rien de sensible n'est envoyé** : `.vercelignore` exclut les fichiers `.env*` (dont la clé Stripe locale) et les fichiers bruts du dossier `identité/`.
+- **Rien de sensible n'est envoyé** : `.vercelignore` exclut les fichiers `.env*` (dont les clés locales) et les fichiers bruts du dossier `identité/`.
 - **Aperçus de lien** : sans domaine défini, les URL absolues (image d'aperçu WhatsApp / Instagram) utilisent automatiquement l'URL de production Vercel (`src/lib/site.ts`).
 - **Pas d'indexation par défaut** : tant que `AUTORISER_INDEXATION` n'est pas à `true`, le site demande aux moteurs de recherche de ne pas l'indexer (`robots.txt` + balise `noindex`).
 
 Variables d'environnement côté Vercel :
 
-| Variable | Quand la définir |
+| Variable | Rôle |
 | --- | --- |
-| `STRIPE_SECRET_KEY` | pour activer le paiement en ligne (sinon règlement au retrait uniquement) |
+| `STRIPE_SECRET_KEY` | clé secrète Stripe (`sk_live_…` en production) |
+| `STRIPE_PUBLISHABLE_KEY` | clé publique du même compte et du même mode (`pk_live_…`) |
+| `STRIPE_WEBHOOK_SECRET` | secret de signature du webhook (`whsec_…`) |
+| `RESEND_API_KEY` | envoi des e-mails de commande et de contact |
+| `COMMANDES_EMAIL` | adresse qui reçoit les commandes |
+| `CONTACT_EMAIL`, `CONTACT_FROM` | formulaire de contact, expéditeur des e-mails |
 | `NEXT_PUBLIC_SITE_URL` | une fois le domaine définitif branché |
 | `AUTORISER_INDEXATION=true` | à la vraie mise en ligne seulement |
-| `RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM` | pour recevoir les messages du formulaire par e-mail |

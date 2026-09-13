@@ -11,18 +11,17 @@ import {
   type Produit,
 } from "@/data/menu";
 import { CRENEAUX, RESTAURANT } from "@/data/restaurant";
+import { sujetTicket, ticketHtml, ticketTexte, type Ticket } from "@/lib/commande";
+import { envoyerEmail } from "@/lib/email";
 import { numeroCommande } from "@/lib/format";
 import { resoudreCleStripe } from "@/lib/stripe";
 
-/** Le client choisit de régler tout de suite ou au moment du retrait. */
-type ModePaiement = "enligne" | "comptoir";
-
 type Corps = {
   lignes?: { id?: unknown; quantite?: unknown; choix?: unknown }[];
-  creneau?: string;
-  note?: string;
-  paiement?: ModePaiement;
-  client?: { prenom?: string; nom?: string; email?: string; telephone?: string };
+  creneau?: unknown;
+  note?: unknown;
+  paiement?: unknown;
+  client?: { prenom?: unknown; nom?: unknown; email?: unknown; telephone?: unknown };
 };
 
 type Article = {
@@ -31,6 +30,11 @@ type Article = {
   choix?: ChoixMenu;
   prixUnitaire: number;
 };
+
+/** Texte saisi par le client : toujours une chaîne nettoyée et bornée. */
+function champ(valeur: unknown, max: number): string {
+  return typeof valeur === "string" ? valeur.trim().slice(0, max) : "";
+}
 
 function origine(req: Request): string {
   return (
@@ -48,20 +52,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ erreur: "Requête illisible." }, { status: 400 });
   }
 
-  const { lignes, creneau, note, client, paiement } = corps;
+  const lignes = corps.lignes;
+  const creneau = champ(corps.creneau, 10);
+  const note = champ(corps.note, 480);
+  const paiement = corps.paiement === "comptoir" ? "comptoir" : "enligne";
+  const client = {
+    prenom: champ(corps.client?.prenom, 60),
+    nom: champ(corps.client?.nom, 60),
+    email: champ(corps.client?.email, 120),
+    telephone: champ(corps.client?.telephone, 30),
+  };
 
   if (!Array.isArray(lignes) || lignes.length === 0) {
     return NextResponse.json({ erreur: "Votre panier est vide." }, { status: 400 });
   }
 
-  if (!creneau || !CRENEAUX.includes(creneau as (typeof CRENEAUX)[number])) {
+  if (!CRENEAUX.includes(creneau as (typeof CRENEAUX)[number])) {
     return NextResponse.json(
       { erreur: "Merci de choisir un créneau de retrait." },
       { status: 400 },
     );
   }
 
-  if (!client?.prenom?.trim() || !client?.telephone?.trim()) {
+  if (!client.prenom || !client.telephone) {
     return NextResponse.json(
       { erreur: "Prénom et téléphone sont nécessaires pour préparer la commande." },
       { status: 400 },
@@ -102,7 +115,7 @@ export async function POST(req: Request) {
   }
 
   // La boulangerie se vend au comptoir : une commande en ligne doit porter sur
-  // au moins un menu ou un plat, pas sur une boisson seule.
+  // au moins un menu, un plat ou un burger, pas sur une boisson seule.
   if (!articles.some(({ produit }) => estPrincipal(produit))) {
     return NextResponse.json(
       {
@@ -127,16 +140,56 @@ export async function POST(req: Request) {
       `[commande ${reference}] ${detailCuisine} — ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${reglement} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""}`,
     );
 
-  const confirmation = `/commande/confirmee?ref=${reference}&creneau=${encodeURIComponent(creneau)}&total=${total}`;
+  /**
+   * Commande à régler au retrait : rien à encaisser, mais la boutique doit en
+   * être informée tout de suite. Si l'e-mail échoue, on le dit au client plutôt
+   * que de lui confirmer une commande que personne ne recevra.
+   */
+  const transmettreCommandeComptoir = async (mention: string) => {
+    journaliser(mention);
 
-  // Règlement au retrait : rien à encaisser maintenant, la commande part
-  // directement en préparation.
+    const ticket: Ticket = {
+      reference,
+      creneau,
+      reglement: "À régler au retrait",
+      total,
+      client,
+      note,
+      lignes: articles.map((a) => ({
+        quantite: a.quantite,
+        nom: a.produit.nom,
+        detail: libelleChoix(a.choix),
+        montant: a.prixUnitaire * a.quantite,
+      })),
+    };
+
+    const envoi = await envoyerEmail({
+      sujet: sujetTicket(ticket),
+      texte: ticketTexte(ticket),
+      html: ticketHtml(ticket),
+      repondreA: client.email || undefined,
+    });
+
+    if (envoi === "echec") {
+      return NextResponse.json(
+        {
+          erreur: `Votre commande n'a pas pu être transmise à la boutique. Appelez-nous au ${RESTAURANT.telephone} pour la passer.`,
+        },
+        { status: 502 },
+      );
+    }
+
+    return NextResponse.json({
+      mode: "comptoir",
+      url: `/commande/confirmee?ref=${reference}&creneau=${encodeURIComponent(creneau)}&total=${total}`,
+    });
+  };
+
   if (paiement === "comptoir") {
-    journaliser("à régler au comptoir");
-    return NextResponse.json({ mode: "comptoir", url: confirmation });
+    return transmettreCommandeComptoir("à régler au comptoir");
   }
 
-  // Clé présente mais inutilisable : on ne bascule pas silencieusement sur le
+  // Clés présentes mais inutilisables : on ne bascule pas silencieusement sur le
   // règlement au comptoir, ce serait masquer une erreur de configuration.
   if (cleStripe.etat === "refusee") {
     console.error(`[checkout] configuration Stripe invalide — ${cleStripe.raison}`);
@@ -149,18 +202,19 @@ export async function POST(req: Request) {
   // Aucune clé Stripe configurée : le paiement en ligne n'existe pas encore,
   // toute commande se règle au comptoir.
   if (cleStripe.etat === "absente") {
-    journaliser("à régler au comptoir (paiement en ligne non configuré)");
-    return NextResponse.json({ mode: "comptoir", url: confirmation });
+    return transmettreCommandeComptoir("à régler au comptoir (paiement en ligne non configuré)");
   }
 
   try {
     const stripe = new Stripe(cleStripe.cle);
-    const base = origine(req);
 
+    // Paiement intégré au site (ui_mode "elements") : pas de redirection vers
+    // une page Stripe. Le navigateur reçoit un client_secret et affiche les
+    // champs de paiement ; la commande n'est considérée payée qu'à la réception
+    // du webhook (voir /api/stripe/webhook).
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      locale: "fr",
-      customer_email: client.email?.trim() || undefined,
+      ui_mode: "elements",
       line_items: articles.map(({ produit, quantite, choix, prixUnitaire: unitaire }) => ({
         quantity: quantite,
         price_data: {
@@ -168,9 +222,9 @@ export async function POST(req: Request) {
           unit_amount: unitaire,
           product_data: {
             name: produit.nom,
-            // Pour un menu, la composition remplace la description : c'est
-            // ce que le client et la cuisine doivent relire.
-            // Stripe refuse une description vide : on l'omet quand le produit n'en a pas.
+            // Pour un menu, la composition remplace la description : c'est ce
+            // que le client et la cuisine doivent relire. Stripe refuse une
+            // description vide : on l'omet quand le produit n'en a pas.
             description: (libelleChoix(choix) ?? produit.description)?.slice(0, 300) || undefined,
           },
         },
@@ -178,23 +232,29 @@ export async function POST(req: Request) {
       metadata: {
         reference,
         creneau,
-        note: (note ?? "").slice(0, 480),
-        client: `${client.prenom ?? ""} ${client.nom ?? ""}`.trim().slice(0, 120),
-        telephone: (client.telephone ?? "").slice(0, 30),
+        note,
+        prenom: client.prenom,
+        nom: client.nom,
+        telephone: client.telephone,
         etablissement: RESTAURANT.nom,
       },
-      success_url: `${base}/commande/confirmee?ref=${reference}&creneau=${encodeURIComponent(creneau)}&total=${total}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/panier?annule=1`,
+      // Après validation (3D Secure compris), Stripe renvoie ici ; la page
+      // relit la session côté serveur avant d'afficher « payé ».
+      return_url: `${origine(req)}/commande/confirmee?session_id={CHECKOUT_SESSION_ID}`,
     });
 
-    if (!session.url) {
-      throw new Error("Stripe n'a pas renvoyé d'URL de paiement.");
+    if (!session.client_secret) {
+      throw new Error("Stripe n'a pas renvoyé de client_secret.");
     }
 
-    // La commande n'est pas encore payée à ce stade : le client part vers
-    // Stripe, la confirmation arrive au retour sur /commande/confirmee.
     journaliser("paiement en ligne engagé");
-    return NextResponse.json({ mode: "stripe", url: session.url });
+    return NextResponse.json({
+      mode: "stripe",
+      clientSecret: session.client_secret,
+      clePublique: cleStripe.clePublique,
+      email: client.email,
+      reference,
+    });
   } catch (erreur) {
     console.error("[checkout] échec de création de session Stripe", erreur);
     return NextResponse.json(
