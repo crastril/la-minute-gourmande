@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePanier } from "@/components/cart-provider";
-import { CATALOGUE, type Produit } from "@/data/menu";
+import { CATALOGUE, prixMenu, type Produit } from "@/data/menu";
 import { prix } from "@/lib/format";
 
 const carteChoix =
@@ -16,7 +16,7 @@ function classeChoix(actif: boolean) {
 
 /**
  * Bouton « Composer mon menu » + fenêtre modale de composition :
- * plat au choix, boisson au choix, dessert en supplément.
+ * plat au choix, boisson au choix, dessert en option.
  * Utilise <dialog> natif : focus piégé, Échap et retour du focus gérés par le
  * navigateur.
  */
@@ -36,7 +36,11 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
   if (!composition) return null;
 
   const complet = plat !== null && boisson !== null;
-  const total = produit.prix + (dessert ? composition.supplementDessert : 0);
+  const total = prixMenu(produit, {
+    plat: plat ?? undefined,
+    boisson: boisson ?? undefined,
+    dessert: dessert || undefined,
+  });
 
   const ouvrir = () => {
     setPlat(null);
@@ -87,8 +91,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                 {produit.nom}
               </h2>
               <p className="mt-2 text-sm text-encre-douce">
-                Plat et boisson inclus · dessert en supplément (
-                {`+${prix(composition.supplementDessert)}`})
+                Plat et boisson au choix · glace en dessert si vous voulez
               </p>
             </div>
             <button
@@ -109,7 +112,10 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                   const choix = CATALOGUE.get(id);
                   if (!choix) return null;
                   return (
-                    <label key={id} className={`${carteChoix} flex flex-col gap-1 p-4 ${classeChoix(plat === id)}`}>
+                    <label
+                      key={id}
+                      className={`${carteChoix} flex items-center justify-between gap-3 p-4 ${classeChoix(plat === id)}`}
+                    >
                       <input
                         type="radio"
                         name={`${produit.id}-plat`}
@@ -121,7 +127,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                       <span className="font-display text-lg font-bold tracking-[0.02em] uppercase">
                         {choix.nom}
                       </span>
-                      <span className="text-sm text-encre-douce">{choix.description}</span>
+                      <span className="chiffres text-orange-fonce">{prix(choix.prix)}</span>
                     </label>
                   );
                 })}
@@ -137,7 +143,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                   return (
                     <label
                       key={id}
-                      className={`${carteChoix} rounded-full px-4 py-2 text-sm font-medium ${classeChoix(boisson === id)}`}
+                      className={`${carteChoix} flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${classeChoix(boisson === id)}`}
                     >
                       <input
                         type="radio"
@@ -148,6 +154,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                         className="sr-only"
                       />
                       {choix.nom}
+                      <span className="chiffres text-encre-pale">{prix(choix.prix)}</span>
                     </label>
                   );
                 })}
@@ -155,12 +162,16 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
             </fieldset>
 
             <fieldset>
-              <legend className="sur-titre mb-3">3 · Un dessert ?</legend>
+              <legend className="sur-titre mb-3">3 · Une glace en dessert ?</legend>
               <div className="grid gap-2 sm:grid-cols-2">
-                {[{ id: "", nom: "Sans dessert" }, ...composition.desserts.map((id) => ({
-                  id,
-                  nom: CATALOGUE.get(id)?.nom ?? id,
-                }))].map((option) => (
+                {[
+                  { id: "", nom: "Sans dessert", tarif: 0 },
+                  ...composition.desserts.map((id) => ({
+                    id,
+                    nom: CATALOGUE.get(id)?.nom ?? id,
+                    tarif: CATALOGUE.get(id)?.prix ?? 0,
+                  })),
+                ].map((option) => (
                   <label
                     key={option.id || "aucun"}
                     className={`${carteChoix} flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium ${classeChoix(dessert === option.id)}`}
@@ -175,9 +186,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                     />
                     {option.nom}
                     {option.id && (
-                      <span className="chiffres text-orange-fonce">
-                        +{prix(composition.supplementDessert)}
-                      </span>
+                      <span className="chiffres text-orange-fonce">+{prix(option.tarif)}</span>
                     )}
                   </label>
                 ))}
@@ -188,7 +197,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
           <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-encre/20 bg-carte px-6 py-4">
             <div>
               <p className="font-display text-[0.75rem] font-semibold tracking-[0.18em] text-encre-pale uppercase">
-                Total du menu
+                {complet ? "Total du menu" : "À partir de"}
               </p>
               <p className="chiffres text-2xl text-orange-fonce">{prix(total)}</p>
             </div>

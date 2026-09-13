@@ -73,21 +73,30 @@ export default function Carte() {
                 <p className="max-w-[42ch] text-sm text-encre-douce">{categorie.intro}</p>
               </Reveal>
 
-              <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {produits.map((produit, i) => (
-                  <Reveal key={produit.id} delai={i * 70}>
-                    <MenuCard produit={produit} />
-                  </Reveal>
-                ))}
-              </div>
+              {categorie.affichage === "liste" ? (
+                // Liste de prix compacte, comme sur le menu imprimé.
+                <Reveal className="mt-6 grid gap-x-12 sm:grid-cols-2">
+                  {produits.map((produit) => (
+                    <MenuCard key={produit.id} produit={produit} variante="ligne" />
+                  ))}
+                </Reveal>
+              ) : (
+                <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {produits.map((produit, i) => (
+                    <Reveal key={produit.id} delai={i * 70}>
+                      <MenuCard produit={produit} />
+                    </Reveal>
+                  ))}
+                </div>
+              )}
             </section>
           );
         })}
 
         <p className="chiffres mt-20 max-w-[60ch] text-[0.7rem] leading-relaxed text-encre-pale">
-          Prix TTC, service compris. La liste des allergènes est indiquée sous
-          chaque produit ; en cas d&apos;allergie sévère, signalez-le en note de
-          commande ou appelez-nous au {RESTAURANT.telephone}.
+          Prix TTC. En cas d&apos;allergie ou d&apos;intolérance, demandez la liste
+          des allergènes au comptoir ou appelez-nous au {RESTAURANT.telephone}{" "}
+          avant de commander.
         </p>
       </div>
 

@@ -317,8 +317,8 @@ export function PanierClient({
 
         {!aUnPrincipal && (
           <p className="mt-7 rounded-ticket border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-orange-fonce">
-            Ajoutez au moins un menu ou un plat : les boissons seules se prennent
-            directement au comptoir.
+            Ajoutez au moins un menu, un plat ou un burger : les boissons seules
+            se prennent directement au comptoir.
           </p>
         )}
 

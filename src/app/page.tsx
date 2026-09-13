@@ -3,8 +3,8 @@ import Link from "next/link";
 import {
   IconeAdresse,
   IconeCroissant,
-  IconeCupcake,
   IconeEmail,
+  IconeGlace,
   IconeInstagram,
   IconeSac,
   IconeSandwich,
@@ -21,7 +21,7 @@ import { prix } from "@/lib/format";
 
 /**
  * ⚠️ Textes à faire relire par le client. Ils reprennent autant que possible
- * les formulations de l'affiche et de l'enseigne.
+ * les formulations de l'affiche, de l'enseigne et du menu imprimé.
  */
 
 // Lu dans le catalogue : le bandeau suit automatiquement les vrais prix.
@@ -51,7 +51,7 @@ const ETAPES = [
     Icone: IconeSmartphone,
     titre: "Vous réservez",
     texte:
-      "Menus et plats du midi se commandent en ligne. Vous choisissez l'heure à laquelle vous passez.",
+      "Menus, plats et burgers du midi se commandent en ligne. Vous choisissez l'heure à laquelle vous passez.",
   },
   {
     numero: "02",
@@ -67,21 +67,22 @@ const ETAPES = [
   },
 ];
 
+// Repris du menu imprimé en boutique.
 const VITRINE = [
   {
     Icone: IconeCroissant,
     titre: "Viennoiseries",
-    texte: "Croissants, pains au chocolat et chaussons faits maison, à prendre au comptoir.",
+    texte: "Pains au chocolat, pommes cannelle, beignets, pâtés banane ou goyave.",
   },
   {
     Icone: IconeSandwich,
-    titre: "Snacking gourmand",
-    texte: "Sandwichs, paninis, salades, parts de pizza et hot-dogs.",
+    titre: "Sandwichs & paninis",
+    texte: "Jambon fromage, poulet, thon mayonnaise, morue… et hot-dogs.",
   },
   {
-    Icone: IconeCupcake,
-    titre: "Pâtisseries maison",
-    texte: "Gâteaux, éclairs, flans et cookies, en vitrine chaque jour.",
+    Icone: IconeGlace,
+    titre: "Glaces",
+    texte: "Cornetto, Magnum, Floup et Mister Friz.",
   },
 ];
 
@@ -155,7 +156,7 @@ export default function Accueil() {
               face du lycée. La vitrine est ouverte toute la journée — et pour le
               midi,{" "}
               <strong className="font-semibold text-encre">
-                menus et plats se réservent en ligne
+                menus, plats et burgers se réservent en ligne
               </strong>
               , prêts à l&apos;heure que vous choisissez.
             </p>

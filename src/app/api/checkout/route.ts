@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         erreur:
-          "Une commande doit contenir au moins un menu ou un plat. Les boissons seules se prennent au comptoir.",
+          "Une commande doit contenir au moins un menu, un plat ou un burger. Les boissons seules se prennent au comptoir.",
       },
       { status: 400 },
     );
@@ -170,7 +170,8 @@ export async function POST(req: Request) {
             name: produit.nom,
             // Pour un menu, la composition remplace la description : c'est
             // ce que le client et la cuisine doivent relire.
-            description: (libelleChoix(choix) ?? produit.description).slice(0, 300),
+            // Stripe refuse une description vide : on l'omet quand le produit n'en a pas.
+            description: (libelleChoix(choix) ?? produit.description)?.slice(0, 300) || undefined,
           },
         },
       })),

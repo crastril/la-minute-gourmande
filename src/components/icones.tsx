@@ -128,3 +128,14 @@ export function IconeGobelet({ className = "" }: Props) {
     </svg>
   );
 }
+
+export function IconeGlace({ className = "" }: Props) {
+  return (
+    <svg {...trait} className={className}>
+      <path d="M7.2 11.5A4.8 4.8 0 0 1 12 6.7a4.8 4.8 0 0 1 4.8 4.8" />
+      <path d="M9.4 7.4A3.2 3.2 0 0 1 12 2.5a3.2 3.2 0 0 1 2.6 4.9" />
+      <path d="M6.8 11.5h10.4L12 22z" />
+      <path d="m9.5 14.5 4 2.5M14.5 14.5l-4 2.5" />
+    </svg>
+  );
+}

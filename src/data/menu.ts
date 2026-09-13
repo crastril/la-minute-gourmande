@@ -1,75 +1,100 @@
 /**
  * Catalogue produits.
  *
- * ⚠️ PLACEHOLDER — noms et prix de démonstration, sauf les deux plats du menu
- * (Poulet frites, Riz poisson frit) donnés par le client. Les prix restent à
- * fournir : aucun support ne les indique.
+ * Source : le menu imprimé affiché en boutique (photo transmise par le client).
+ * Noms et prix en sont repris tels quels. Ce menu ne donne ni descriptions ni
+ * allergènes : aucun n'est inventé ici.
  *
- * La STRUCTURE ci-dessous est la bonne et ne bougera plus :
+ * ⚠️ Points à confirmer avec le client :
+ *  — « Burger » et « Cheeseburger » sont imprimés dans le bloc Paninis : ils
+ *    sont traités ici comme des burgers (restauration, réservables en ligne) ;
+ *  — « Didier » puis « Nature 50 cl » et « Aromatisée 50 cl » : repris en trois
+ *    lignes, faute de savoir à quel format correspond la première ;
+ *  — le « Riz poisson frit » demandé pour le menu est rapproché du « Poisson
+ *    frit mariné » de la carte (10,00 €) ;
+ *  — le prix du menu : aucune règle fournie, il vaut donc la somme des choix.
+ *    Ajuster le champ `remise` quand le client aura donné son prix de menu.
  *
- *   — une catégorie `commandable: false` est une VITRINE : le produit est
- *     montré sur le site mais ne peut pas être mis au panier (viennoiseries,
- *     snacking, pâtisseries). Les frais fixes de paiement rendraient une vente
- *     à 1,30 € absurde : ces produits s'achètent au comptoir.
- *
- *   — une catégorie `commandable: true` peut être réservée en ligne, puis
- *     payée au choix en ligne ou au retrait (menus, plats, boissons).
- *
- *   — un produit avec une `composition` est un MENU : on le compose dans une
- *     fenêtre (plat au choix, boisson au choix, dessert en supplément) avant
- *     de l'ajouter au panier. Les choix proposés référencent d'autres produits
- *     du catalogue par leur identifiant.
+ * Structure :
+ *   — `commandable: false` : VITRINE, visible sur le site mais achetée au
+ *     comptoir (les frais fixes de paiement rendraient absurde une vente en
+ *     ligne à 1,40 €) ;
+ *   — `commandable: true` : réservable en ligne, payée en ligne ou au retrait ;
+ *   — `affichage: "liste"` : liste de prix compacte, comme le menu imprimé,
+ *     plutôt que de grandes cartes illustrées ;
+ *   — `composition` : MENU à composer dans une fenêtre (plat, boisson, dessert
+ *     en option), par identifiants d'autres produits du catalogue.
  */
 
 export const CATEGORIES = [
   {
     id: "menus",
     nom: "Menus",
-    intro: "Plat et boisson au choix, dessert en option. À réserver pour le midi.",
+    intro: "Votre plat et votre boisson au choix, une glace en dessert si vous voulez. À réserver pour le midi.",
     commandable: true,
+    affichage: "cartes",
   },
   {
     id: "plats",
-    nom: "Burgers & plats",
-    intro: "Préparés à la commande, prêts pour votre créneau de retrait.",
+    nom: "Plats chauds",
+    intro: "Préparés pour votre créneau de retrait du midi.",
     commandable: true,
+    affichage: "cartes",
+  },
+  {
+    id: "burgers",
+    nom: "Burgers",
+    intro: "À réserver en ligne pour le midi.",
+    commandable: true,
+    affichage: "cartes",
   },
   {
     id: "boissons",
     nom: "Boissons",
     intro: "À ajouter à votre commande.",
     commandable: true,
+    affichage: "liste",
   },
   {
-    id: "snacking",
-    nom: "Snacking salé",
+    id: "sandwichs",
+    nom: "Sandwichs",
     intro: "Au comptoir, toute la journée.",
     commandable: false,
+    affichage: "liste",
+  },
+  {
+    id: "paninis",
+    nom: "Paninis & hot-dog",
+    intro: "Au comptoir, toute la journée.",
+    commandable: false,
+    affichage: "liste",
   },
   {
     id: "viennoiseries",
-    nom: "Viennoiseries & pains",
-    intro: "Faits maison, à prendre au comptoir.",
+    nom: "Viennoiseries",
+    intro: "Faites maison, à prendre au comptoir.",
     commandable: false,
+    affichage: "liste",
   },
   {
-    id: "patisseries",
-    nom: "Pâtisseries",
-    intro: "La vitrine sucrée, à emporter au comptoir.",
+    id: "glaces",
+    nom: "Glaces",
+    intro: "Au comptoir, et en dessert dans les menus.",
     commandable: false,
+    affichage: "liste",
   },
 ] as const;
 
 export type CategorieId = (typeof CATEGORIES)[number]["id"];
 
 /** Catégories dont au moins un article est exigé pour valider une commande. */
-export const CATEGORIES_PRINCIPALES: CategorieId[] = ["menus", "plats"];
+export const CATEGORIES_PRINCIPALES: CategorieId[] = ["menus", "plats", "burgers"];
 
 /** Les choix faits par le client en composant un menu. */
 export type ChoixMenu = {
   plat: string;
   boisson: string;
-  /** Optionnel : un dessert ajoute `supplementDessert` au prix du menu. */
+  /** Optionnel : facturé à son prix de la carte. */
   dessert?: string;
 };
 
@@ -77,19 +102,23 @@ export type ChoixMenu = {
 export type CompositionMenu = {
   plats: string[];
   boissons: string[];
+  /** Desserts proposés en option, facturés à leur prix de la carte. */
   desserts: string[];
-  /** Supplément en centimes quand un dessert est choisi. */
-  supplementDessert: number;
+  /**
+   * Remise en centimes sur la somme plat + boisson + dessert.
+   * ⚠️ 0 tant que le client n'a pas indiqué le prix de ses menus.
+   */
+  remise: number;
 };
 
 export type Produit = {
   id: string;
   nom: string;
-  description: string;
-  /** Prix TTC en centimes, pour éviter toute erreur d'arrondi. */
+  /** Prix TTC en centimes. Pour un menu : calculé (composition la moins chère). */
   prix: number;
   categorie: CategorieId;
-  /** Chemin d'une photo dans /public (ex. "/photos/burger.jpg"). Optionnel. */
+  description?: string;
+  /** Chemin d'une photo dans /public (ex. "/photos/poulet-frites.jpg"). Optionnel. */
   image?: string;
   tags?: string[];
   allergenes?: string[];
@@ -101,196 +130,111 @@ export type Produit = {
   composition?: CompositionMenu;
 };
 
+const BOISSONS: Produit[] = [
+  { id: "caprisone", nom: "Caprisone", prix: 100, categorie: "boissons" },
+  { id: "chanflor-50cl", nom: "Chanflor 50 cl", prix: 100, categorie: "boissons" },
+  { id: "chanflor-1l", nom: "Chanflor 1 L", prix: 150, categorie: "boissons" },
+  { id: "chanflor-1-5l", nom: "Chanflor 1,5 L", prix: 220, categorie: "boissons" },
+  { id: "the-aromatise", nom: "Thé aromatisé", prix: 150, categorie: "boissons" },
+  { id: "joker", nom: "Joker", prix: 160, categorie: "boissons" },
+  { id: "didier", nom: "Didier", prix: 200, categorie: "boissons" },
+  { id: "didier-nature-50cl", nom: "Didier nature 50 cl", prix: 220, categorie: "boissons" },
+  { id: "didier-aromatisee-50cl", nom: "Didier aromatisée 50 cl", prix: 200, categorie: "boissons" },
+  { id: "coca-cola", nom: "Coca-Cola", prix: 200, categorie: "boissons" },
+  { id: "soda", nom: "Soda", prix: 200, categorie: "boissons" },
+  { id: "amigo", nom: "Amigo", prix: 200, categorie: "boissons" },
+  { id: "sprite", nom: "Sprite", prix: 200, categorie: "boissons" },
+  { id: "ordinaire", nom: "Ordinaire", prix: 200, categorie: "boissons" },
+  { id: "schweppes", nom: "Schweppes", prix: 200, categorie: "boissons" },
+  { id: "orangina", nom: "Orangina", prix: 200, categorie: "boissons" },
+  { id: "oasis", nom: "Oasis", prix: 200, categorie: "boissons" },
+  { id: "caresse-antillaise", nom: "Caresse antillaise", prix: 200, categorie: "boissons" },
+  { id: "mont-pele", nom: "Mont Pelé", prix: 200, categorie: "boissons" },
+  { id: "jus-royal", nom: "Jus Royal", prix: 220, categorie: "boissons" },
+  { id: "jus-local", nom: "Jus local", prix: 300, categorie: "boissons" },
+  { id: "malta", nom: "Malta", prix: 300, categorie: "boissons" },
+];
+
+const GLACES: Produit[] = [
+  { id: "floup", nom: "Floup", prix: 80, categorie: "glaces" },
+  { id: "mister-friz", nom: "Mister Friz", prix: 80, categorie: "glaces" },
+  { id: "cornetto", nom: "Cornetto", prix: 200, categorie: "glaces" },
+  { id: "magnum", nom: "Magnum", prix: 200, categorie: "glaces" },
+];
+
 export const PRODUITS: Produit[] = [
   /* ——— Menus (commandables, à composer) ——— */
   {
     id: "menu-du-midi",
     nom: "Menu du midi",
-    description: "Votre plat et votre boisson au choix. Ajoutez un dessert pour un petit supplément.",
-    prix: 1050,
+    description: "Votre plat et votre boisson au choix. Ajoutez une glace en dessert si vous voulez.",
+    prix: 0, // calculé plus bas : composition la moins chère
     categorie: "menus",
-    tags: ["Plat + boisson", "Dessert en option"],
-    populaire: true,
+    tags: ["Plat + boisson", "Glace en option"],
     duJour: true,
     composition: {
-      plats: ["poulet-frites", "riz-poisson-frit"],
-      boissons: ["canette", "eau", "jus"],
-      desserts: ["eclair", "flan", "cookie"],
-      supplementDessert: 150,
+      plats: ["poulet-frites", "poisson-frit-marine"],
+      boissons: BOISSONS.map((b) => b.id),
+      desserts: GLACES.map((g) => g.id),
+      remise: 0,
     },
   },
 
-  /* ——— Burgers & plats (commandables) ——— */
+  /* ——— Plats chauds (commandables) ——— */
+  { id: "barquette-frites", nom: "Barquette de frites", prix: 300, categorie: "plats" },
+  { id: "poulet-frites", nom: "Poulet frites", prix: 790, categorie: "plats", duJour: true },
+  { id: "cote-porc", nom: "Côte de porc", prix: 900, categorie: "plats" },
+  { id: "ribs", nom: "Ribs", prix: 900, categorie: "plats" },
   {
-    id: "poulet-frites",
-    nom: "Poulet frites",
-    description: "Poulet grillé servi avec ses frites.",
-    prix: 850,
+    id: "poisson-frit-marine",
+    nom: "Poisson frit mariné",
+    prix: 1000,
     categorie: "plats",
     duJour: true,
   },
-  {
-    id: "riz-poisson-frit",
-    nom: "Riz poisson frit",
-    description: "Poisson frit servi avec du riz.",
-    prix: 950,
-    categorie: "plats",
-    duJour: true,
-    allergenes: ["Poisson"],
-  },
-  {
-    id: "burger-classique",
-    nom: "Burger classique",
-    description: "Steak haché, cheddar, salade, tomate, oignons, sauce maison. Frites incluses.",
-    prix: 750,
-    categorie: "plats",
-    populaire: true,
-    allergenes: ["Gluten", "Lait", "Œuf", "Moutarde"],
-  },
-  {
-    id: "burger-poulet",
-    nom: "Burger poulet croustillant",
-    description: "Poulet pané, cheddar, salade, sauce burger. Frites incluses.",
-    prix: 790,
-    categorie: "plats",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "burger-vege",
-    nom: "Burger végétarien",
-    description: "Galette de légumes, cheddar, roquette, sauce au yaourt. Frites incluses.",
-    prix: 750,
-    categorie: "plats",
-    tags: ["Végétarien"],
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
 
-  /* ——— Boissons (commandables, en accompagnement) ——— */
-  {
-    id: "canette",
-    nom: "Canette 33 cl",
-    description: "Sodas et boissons fraîches au choix.",
-    prix: 180,
-    categorie: "boissons",
-  },
-  {
-    id: "eau",
-    nom: "Bouteille d'eau 50 cl",
-    description: "Plate ou pétillante.",
-    prix: 100,
-    categorie: "boissons",
-  },
-  {
-    id: "jus",
-    nom: "Jus de fruits",
-    description: "Orange, pomme ou multifruits.",
-    prix: 220,
-    categorie: "boissons",
-  },
-  {
-    id: "cafe",
-    nom: "Café",
-    description: "Expresso ou allongé.",
-    prix: 120,
-    categorie: "boissons",
-  },
+  /* ——— Burgers (commandables) ——— */
+  { id: "burger", nom: "Burger", prix: 600, categorie: "burgers" },
+  { id: "cheeseburger", nom: "Cheeseburger", prix: 650, categorie: "burgers" },
 
-  /* ——— Snacking salé (vitrine) ——— */
-  {
-    id: "part-pizza",
-    nom: "Part de pizza",
-    description: "Margherita, reine ou chorizo, selon la fournée du jour.",
-    prix: 320,
-    categorie: "snacking",
-    populaire: true,
-    allergenes: ["Gluten", "Lait"],
-  },
-  {
-    id: "sandwich-jambon-beurre",
-    nom: "Jambon-beurre",
-    description: "Baguette tradition, beurre doux, jambon blanc.",
-    prix: 420,
-    categorie: "snacking",
-    allergenes: ["Gluten", "Lait"],
-  },
-  {
-    id: "panini",
-    nom: "Panini",
-    description: "Jambon-fromage ou poulet-crudités, passé au grill.",
-    prix: 450,
-    categorie: "snacking",
-    allergenes: ["Gluten", "Lait"],
-  },
-  {
-    id: "quiche",
-    nom: "Part de quiche lorraine",
-    description: "Pâte brisée maison, lardons, crème, œufs.",
-    prix: 380,
-    categorie: "snacking",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
+  /* ——— Boissons (commandables) ——— */
+  ...BOISSONS,
 
-  /* ——— Viennoiseries & pains (vitrine) ——— */
-  {
-    id: "pain-au-chocolat",
-    nom: "Pain au chocolat",
-    description: "Pur beurre, deux barres de chocolat noir.",
-    prix: 130,
-    categorie: "viennoiseries",
-    populaire: true,
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "croissant",
-    nom: "Croissant",
-    description: "Pur beurre, feuilletage maison.",
-    prix: 120,
-    categorie: "viennoiseries",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "pain-aux-raisins",
-    nom: "Pain aux raisins",
-    description: "Crème pâtissière et raisins macérés.",
-    prix: 150,
-    categorie: "viennoiseries",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "baguette",
-    nom: "Baguette tradition",
-    description: "Pétrie et cuite sur place.",
-    prix: 130,
-    categorie: "viennoiseries",
-    allergenes: ["Gluten"],
-  },
+  /* ——— Sandwichs (vitrine) ——— */
+  { id: "sandwich-jambon-fromage", nom: "Jambon fromage", prix: 450, categorie: "sandwichs" },
+  { id: "sandwich-poulet", nom: "Poulet", prix: 550, categorie: "sandwichs" },
+  { id: "sandwich-thon-mayonnaise", nom: "Thon mayonnaise", prix: 550, categorie: "sandwichs" },
+  { id: "sandwich-morue", nom: "Morue", prix: 500, categorie: "sandwichs" },
+  { id: "sandwich-saucisson-fromage", nom: "Saucisson fromage", prix: 550, categorie: "sandwichs" },
+  { id: "sandwich-poisson", nom: "Poisson", prix: 590, categorie: "sandwichs" },
 
-  /* ——— Pâtisseries (vitrine, et desserts des menus) ——— */
-  {
-    id: "eclair",
-    nom: "Éclair au chocolat",
-    description: "Pâte à choux, crème pâtissière au chocolat noir.",
-    prix: 250,
-    categorie: "patisseries",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "flan",
-    nom: "Part de flan",
-    description: "Vanille, cuisson longue.",
-    prix: 220,
-    categorie: "patisseries",
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
-  {
-    id: "cookie",
-    nom: "Cookie",
-    description: "Pépites de chocolat.",
-    prix: 150,
-    categorie: "patisseries",
-    populaire: true,
-    allergenes: ["Gluten", "Lait", "Œuf"],
-  },
+  /* ——— Paninis & hot-dog (vitrine) ——— */
+  { id: "panini-jambon-fromage", nom: "Panini jambon fromage", prix: 500, categorie: "paninis" },
+  { id: "panini-thon-mayonnaise", nom: "Panini thon mayonnaise", prix: 550, categorie: "paninis" },
+  { id: "panini-poulet", nom: "Panini poulet", prix: 600, categorie: "paninis" },
+  { id: "panini-steak", nom: "Panini steak", prix: 600, categorie: "paninis" },
+  { id: "panini-merguez", nom: "Panini merguez", prix: 600, categorie: "paninis" },
+  { id: "panini-kebab", nom: "Panini kebab", prix: 600, categorie: "paninis" },
+  { id: "hot-dog", nom: "Hot-dog", prix: 300, categorie: "paninis" },
+
+  /* ——— Viennoiseries (vitrine) ——— */
+  { id: "pain-au-chocolat", nom: "Pain au chocolat", prix: 140, categorie: "viennoiseries" },
+  { id: "pomme-cannelle", nom: "Pomme cannelle", prix: 140, categorie: "viennoiseries" },
+  { id: "pomme-cannelle-pepite", nom: "Pomme cannelle pépite", prix: 150, categorie: "viennoiseries" },
+  { id: "feuillete-saucisse", nom: "Feuilleté saucisse", prix: 140, categorie: "viennoiseries" },
+  { id: "croissant-jambon-fromage", nom: "Croissant jambon fromage", prix: 150, categorie: "viennoiseries" },
+  { id: "pain-aux-raisins", nom: "Pain aux raisins", prix: 150, categorie: "viennoiseries" },
+  { id: "croissant-nature", nom: "Croissant nature", prix: 110, categorie: "viennoiseries" },
+  { id: "torsade-chocolat", nom: "Torsade chocolat", prix: 200, categorie: "viennoiseries" },
+  { id: "beignet-pommes", nom: "Beignet aux pommes", prix: 150, categorie: "viennoiseries" },
+  { id: "beignet-chocolat", nom: "Beignet chocolat", prix: 150, categorie: "viennoiseries" },
+  { id: "pate-banane", nom: "Pâté banane", prix: 140, categorie: "viennoiseries" },
+  { id: "pate-goyave", nom: "Pâté goyave", prix: 140, categorie: "viennoiseries" },
+  { id: "pain-au-chocolat-maxi", nom: "Pain au chocolat maxi", prix: 220, categorie: "viennoiseries" },
+  { id: "pain-brioche-saucisse", nom: "Pain brioché saucisse", prix: 220, categorie: "viennoiseries" },
+
+  /* ——— Glaces (vitrine, et desserts des menus) ——— */
+  ...GLACES,
 ];
 
 export const CATALOGUE = new Map(PRODUITS.map((p) => [p.id, p]));
@@ -304,9 +248,34 @@ export function estCommandable(produit: Produit): boolean {
   return COMMANDABLES.has(produit.categorie) && !produit.epuise;
 }
 
-/** Une commande doit contenir au moins un menu ou un plat. */
+/** Une commande doit contenir au moins un menu, un plat ou un burger. */
 export function estPrincipal(produit: Produit): boolean {
   return CATEGORIES_PRINCIPALES.includes(produit.categorie);
+}
+
+function prixDe(id: string): number {
+  return CATALOGUE.get(id)?.prix ?? 0;
+}
+
+/**
+ * Prix d'un menu selon les choix faits : somme plat + boisson + dessert, moins
+ * la remise. Un choix pas encore fait compte pour l'option la moins chère, ce
+ * qui donne le « dès … » affiché avant composition.
+ */
+export function prixMenu(produit: Produit, choix: Partial<ChoixMenu>): number {
+  const composition = produit.composition;
+  if (!composition) return produit.prix;
+
+  const moinsCher = (ids: string[]) => Math.min(...ids.map(prixDe));
+  const plat = choix.plat ? prixDe(choix.plat) : moinsCher(composition.plats);
+  const boisson = choix.boisson ? prixDe(choix.boisson) : moinsCher(composition.boissons);
+  const dessert = choix.dessert ? prixDe(choix.dessert) : 0;
+  return Math.max(0, plat + boisson + dessert - composition.remise);
+}
+
+// Le prix affiché d'un menu suit automatiquement les prix de la carte.
+for (const produit of PRODUITS) {
+  if (produit.composition) produit.prix = prixMenu(produit, {});
 }
 
 /**
@@ -328,14 +297,12 @@ export function validerChoix(produit: Produit, choix: unknown): ChoixMenu | null
   return { plat, boisson, dessert };
 }
 
-/** Prix d'une unité, supplément dessert compris pour un menu. */
+/** Prix d'une unité : prix de la carte, ou prix du menu selon sa composition. */
 export function prixUnitaire(produit: Produit, choix?: ChoixMenu): number {
-  const supplement =
-    produit.composition && choix?.dessert ? produit.composition.supplementDessert : 0;
-  return produit.prix + supplement;
+  return produit.composition && choix ? prixMenu(produit, choix) : produit.prix;
 }
 
-/** « Poulet frites · Canette 33 cl · Éclair au chocolat », ou null hors menu. */
+/** « Poulet frites · Coca-Cola · Magnum », ou null hors menu. */
 export function libelleChoix(choix?: ChoixMenu): string | null {
   if (!choix) return null;
   return [choix.plat, choix.boisson, choix.dessert]

@@ -2,19 +2,22 @@ import Image from "next/image";
 import {
   IconeBurger,
   IconeCroissant,
-  IconeCupcake,
+  IconeGlace,
   IconeGobelet,
   IconeSandwich,
+  IconeToque,
 } from "@/components/icones";
 import { CATEGORIES, type CategorieId, type Produit } from "@/data/menu";
 
 const ICONE_PAR_CATEGORIE: Record<CategorieId, typeof IconeBurger> = {
-  menus: IconeBurger,
-  plats: IconeBurger,
+  menus: IconeToque,
+  plats: IconeToque,
+  burgers: IconeBurger,
   boissons: IconeGobelet,
-  snacking: IconeSandwich,
+  sandwichs: IconeSandwich,
+  paninis: IconeSandwich,
   viennoiseries: IconeCroissant,
-  patisseries: IconeCupcake,
+  glaces: IconeGlace,
 };
 
 /**

@@ -2,41 +2,47 @@
 
 Sandwicherie, pâtisserie et restauration rapide au François (Martinique), en face d'un lycée. Le site sert de vitrine à l'ensemble des produits, et permet de réserver en ligne les repas du midi (click & collect).
 
+**Version de validation** : https://la-minute-gourmande.vercel.app (non indexée par les moteurs de recherche).
+
 ## Les deux univers du catalogue
 
-C'est la règle structurante du projet, encodée dans `src/data/menu.ts` :
+C'est la règle structurante du projet, encodée dans `src/data/menu.ts`. Noms et prix sont repris du **menu imprimé affiché en boutique**.
 
 | | Vitrine | Commandable |
 | --- | --- | --- |
-| Catégories | viennoiseries, snacking, pâtisseries | menus, plats, boissons |
-| Sur le site | consultable, prix affiché | ajoutable au panier |
+| Catégories | sandwichs, paninis & hot-dog, viennoiseries, glaces | menus, plats chauds, burgers, boissons |
+| Sur le site | liste de prix | ajoutable au panier |
 | Achat | au comptoir uniquement | réservation en ligne |
 
-La vitrine n'est pas commandable **par choix économique** : avec ~0,25 € de frais fixes par transaction, vendre un pain au chocolat à 1,30 € en ligne coûterait ~22 % du prix. Ces produits se prennent au comptoir.
+La vitrine n'est pas commandable **par choix économique** : avec ~0,25 € de frais fixes par transaction, vendre un pain au chocolat à 1,40 € en ligne coûterait près de 20 % du prix. Ces produits se prennent au comptoir.
+
+Menus, plats chauds et burgers s'affichent en grandes cartes ; les autres catégories en **liste de prix compacte**, comme sur le menu imprimé (champ `affichage` de chaque catégorie).
 
 ### Menus à composer
 
-Un produit qui porte une `composition` est un **menu** : le bouton « Composer mon menu » ouvre une fenêtre où l'on choisit son **plat**, sa **boisson**, et, pour un supplément, un **dessert**. Le menu n'est ajouté au panier qu'une fois plat et boisson choisis.
+Un produit qui porte une `composition` est un **menu** : le bouton « Composer mon menu » ouvre une fenêtre où l'on choisit son **plat**, sa **boisson**, et, en option, une **glace** en dessert. Le menu n'est ajouté au panier qu'une fois plat et boisson choisis.
 
 ```ts
 composition: {
-  plats: ["poulet-frites", "riz-poisson-frit"],
-  boissons: ["canette", "eau", "jus"],
-  desserts: ["eclair", "flan", "cookie"],   // pris dans les pâtisseries
-  supplementDessert: 150,                    // centimes
+  plats: ["poulet-frites", "poisson-frit-marine"],
+  boissons: BOISSONS.map((b) => b.id),   // toutes les boissons de la carte
+  desserts: GLACES.map((g) => g.id),     // les glaces, facturées à leur prix
+  remise: 0,                             // centimes, à régler selon le prix du menu
 }
 ```
 
-Les choix référencent d'autres produits du catalogue : pour ajouter un plat au menu, il suffit d'ajouter son identifiant à la liste. Deux menus composés différemment occupent deux lignes du panier ; deux menus identiques fusionnent.
+**Prix du menu** : somme plat + boisson + dessert, moins la `remise`. Le « dès … » affiché est celui de la composition la moins chère, recalculé automatiquement depuis les prix de la carte. Tant que le client n'a pas donné sa règle de prix, la remise vaut 0.
+
+Deux menus composés différemment occupent deux lignes du panier ; deux menus identiques fusionnent.
 
 ### Règles appliquées côté serveur
 
 Toutes appliquées par `/api/checkout`, et pas seulement dans l'interface :
 
 1. un produit de vitrine est rejeté, même si la requête est forgée à la main ;
-2. une commande doit contenir au moins un **menu ou un plat**, une boisson seule ne suffit pas ;
+2. une commande doit contenir au moins un **menu, un plat ou un burger** ; une boisson seule ne suffit pas ;
 3. le créneau doit appartenir à la liste du midi (11h30 → 13h30) ;
-4. la composition d'un menu est revérifiée (plat, boisson et dessert doivent figurer dans le menu) et le supplément dessert est recalculé.
+4. la composition d'un menu est revérifiée (plat, boisson et dessert doivent figurer dans le menu) et son prix recalculé.
 
 Le client choisit ensuite son règlement : **en ligne** (Stripe Checkout) ou **au retrait**. Sans clé Stripe configurée, l'option « payer maintenant » est affichée comme bientôt disponible et seul le règlement au retrait est possible.
 
@@ -64,25 +70,28 @@ Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour d
 
 ---
 
-## ⚠️ Ce qui reste à brancher (contenu client)
+## ⚠️ Ce qui reste à confirmer ou fournir
 
-Le code est terminé ; il attend les éléments réels. Tout est regroupé pour qu'une seule passe suffise :
+**Déjà intégré** : logo, palette, typographies, coordonnées, date d'ouverture (dossier `identité/`) et **produits et prix du menu imprimé**. Le détail de l'identité visuelle est dans [`public/brand/LISEZ-MOI.md`](public/brand/LISEZ-MOI.md).
 
 | À fournir | Où ça se branche |
 | --- | --- |
-| **Produits & prix** | `src/data/menu.ts`, le reste du site lit uniquement ce fichier. Les supports fournis ne donnent aucun prix |
-| **Prix du menu et du supplément dessert** | `src/data/menu.ts`, produit `menu-du-midi` |
-| **Photos des plats** | `public/photos/`, puis champ `image` de chaque produit |
+| **Prix des menus** (remise par rapport aux prix à la carte) | `src/data/menu.ts`, champ `remise` du `menu-du-midi` |
+| **Allergènes** (information obligatoire en restauration) | `src/data/menu.ts`, champ `allergenes` de chaque produit |
+| **Photos et descriptions** des plats | `public/photos/` puis champs `image` et `description` |
 | **Horaires d'ouverture** | `src/data/restaurant.ts` |
 | **Domaine du site** | `src/data/restaurant.ts` (`url`) et `NEXT_PUBLIC_SITE_URL` |
 | **Mentions légales** (SIRET, RCS, TVA…) | `src/app/mentions-legales/page.tsx` |
 | **Logo vectoriel** (optionnel) | `public/brand/`, le logo actuel est une image extraite du PDF |
 
-**Déjà intégré** depuis le dossier `identité/` : logo, palette, typographies, adresse, téléphone, e-mail, Instagram et date d'ouverture. Le détail de l'identité visuelle est dans [`public/brand/LISEZ-MOI.md`](public/brand/LISEZ-MOI.md). Les deux plats du menu (Poulet frites, Riz poisson frit) ont été donnés par le client.
+Lectures du menu imprimé **à faire confirmer** par le client :
 
-Les textes de l'accueil et de « La boutique » reprennent les formulations de l'affiche et de l'enseigne, mais restent **à faire valider** par le client. Aucun témoignage ni historique n'est inventé.
+- « Burger » et « Cheeseburger » sont imprimés dans le bloc Paninis : ils sont traités comme des burgers réservables en ligne ;
+- « Didier » puis « Nature 50 cl » et « Aromatisée 50 cl » : repris en trois lignes ;
+- le « Riz poisson frit » demandé pour le menu est rapproché du « Poisson frit mariné » (10,00 €) ;
+- les parts de pizza et les salades évoquées ailleurs ne figurent pas sur le menu imprimé, donc pas sur le site.
 
-Tant qu'aucune photo n'est fournie, chaque produit affiche une assiette dessinée avec le pictogramme de sa catégorie : rien ne casse.
+Les textes de l'accueil et de « La boutique » reprennent les formulations de l'affiche et de l'enseigne, mais restent **à faire valider**. Aucun témoignage, historique, description ou allergène n'est inventé. Sans photo, chaque produit affiche une assiette dessinée avec le pictogramme de sa catégorie.
 
 ---
 
@@ -104,12 +113,13 @@ src/
     cart-provider.tsx           Panier (store externe + useSyncExternalStore)
     composer-menu.tsx           Fenêtre de composition d'un menu (<dialog>)
     site-header.tsx  site-footer.tsx  logo.tsx
-    menu-card.tsx  add-to-cart.tsx  dish-visual.tsx
+    menu-card.tsx               Produit en carte illustrée ou en ligne de prix
+    add-to-cart.tsx  dish-visual.tsx
     panier-client.tsx  panier-flottant.tsx  vider-panier.tsx
     formulaire-contact.tsx  reveal.tsx
     icones.tsx  ornement.tsx    Pictogrammes et ornements de la charte
   data/
-    menu.ts                     Catalogue, menus à composer, règles de validation
+    menu.ts                     Catalogue, menus à composer, prix et validation
     restaurant.ts               Coordonnées, horaires, créneaux du midi
   lib/
     format.ts                   Prix en euros, référence de commande
@@ -126,9 +136,9 @@ Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans 
 
 ### Sécurité des prix
 
-`/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés, les quantités hors bornes (1 à 20) et les compositions de menu invalides, puis recalcule le montant côté serveur, supplément dessert compris. Les formulaires publics sont protégés par un pot de miel anti-robot.
+`/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés, les quantités hors bornes (1 à 20) et les compositions de menu invalides, puis recalcule le montant côté serveur. Les formulaires publics sont protégés par un pot de miel anti-robot.
 
-La composition des menus figure dans la description de chaque ligne Stripe et dans le journal serveur, par exemple : `2× Menu du midi (Poulet frites · Canette 33 cl · Éclair au chocolat)`.
+La composition des menus figure dans la description de chaque ligne Stripe et dans le journal serveur, par exemple : `2× Menu du midi (Poulet frites · Coca-Cola · Magnum)`.
 
 ---
 
@@ -172,9 +182,10 @@ Le projet est déployé sur Vercel avec la CLI :
 vercel deploy --prod
 ```
 
+- **Lien à partager** : `https://la-minute-gourmande.vercel.app`. Les URL propres à chaque déploiement (`la-minute-gourmande-xxxx-….vercel.app`) sont protégées par l'authentification Vercel et ne s'ouvrent pas pour un visiteur.
 - **Rien de sensible n'est envoyé** : `.vercelignore` exclut les fichiers `.env*` (dont la clé Stripe locale) et les fichiers bruts du dossier `identité/`.
-- **URL de partage** : sans domaine défini, les URL absolues (image d'aperçu des liens WhatsApp / Instagram) utilisent automatiquement l'URL de production Vercel (`src/lib/site.ts`).
-- **Pas d'indexation par défaut** : tant que `AUTORISER_INDEXATION` n'est pas à `true`, le site demande aux moteurs de recherche de ne pas l'indexer (`robots.txt` + balise `noindex`). Une version de validation, avec des prix provisoires, ne doit pas apparaître dans Google sous le nom de la boutique.
+- **Aperçus de lien** : sans domaine défini, les URL absolues (image d'aperçu WhatsApp / Instagram) utilisent automatiquement l'URL de production Vercel (`src/lib/site.ts`).
+- **Pas d'indexation par défaut** : tant que `AUTORISER_INDEXATION` n'est pas à `true`, le site demande aux moteurs de recherche de ne pas l'indexer (`robots.txt` + balise `noindex`).
 
 Variables d'environnement côté Vercel :
 
