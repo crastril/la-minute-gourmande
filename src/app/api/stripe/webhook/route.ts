@@ -73,6 +73,11 @@ export async function POST(req: Request) {
       reference: meta.reference || session.id,
       creneau: meta.creneau || "—",
       reglement: "Payée en ligne",
+      // Lien direct vers le paiement : c'est de là que la boutique rembourse.
+      lienStripe:
+        typeof session.payment_intent === "string"
+          ? `https://dashboard.stripe.com/${session.livemode ? "" : "test/"}payments/${session.payment_intent}`
+          : null,
       total: session.amount_total ?? 0,
       client: {
         prenom: meta.prenom,

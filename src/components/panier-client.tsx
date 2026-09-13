@@ -93,6 +93,7 @@ export function PanierClient({
           creneau: donnees.get("creneau"),
           note: donnees.get("note"),
           paiement,
+          cgv: donnees.get("cgv") === "on",
           client: {
             prenom: donnees.get("prenom"),
             nom: donnees.get("nom"),
@@ -348,6 +349,28 @@ export function PanierClient({
               />
             </label>
           </div>
+
+          {/* Acceptation des CGV : obligatoire, et revérifiée par le serveur. */}
+          <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-encre-douce">
+            <input
+              type="checkbox"
+              name="cgv"
+              required
+              className="mt-1 size-4 shrink-0 cursor-pointer accent-orange"
+            />
+            <span>
+              J&apos;ai lu et j&apos;accepte les{" "}
+              <Link
+                href="/cgv"
+                target="_blank"
+                className="text-orange-fonce underline underline-offset-2 transition-colors hover:text-encre"
+              >
+                conditions générales de vente
+              </Link>
+              , notamment l&apos;absence de droit de rétractation pour les denrées
+              préparées.
+            </span>
+          </label>
 
           {erreur && (
             <p role="alert" className="mt-5 rounded-ticket border border-brique/40 bg-brique/10 px-4 py-3 text-sm text-brique">

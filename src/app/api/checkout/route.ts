@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { CGV } from "@/data/cgv";
 import {
   CATALOGUE,
   estCommandable,
@@ -21,6 +22,8 @@ type Corps = {
   creneau?: unknown;
   note?: unknown;
   paiement?: unknown;
+  /** Acceptation des conditions générales de vente (case du panier). */
+  cgv?: unknown;
   client?: { prenom?: unknown; nom?: unknown; email?: unknown; telephone?: unknown };
 };
 
@@ -81,6 +84,15 @@ export async function POST(req: Request) {
     );
   }
 
+  // Les CGV ne s'appliquent que si elles ont été acceptées avant la commande :
+  // la case du panier est obligatoire, et on le revérifie ici.
+  if (corps.cgv !== true) {
+    return NextResponse.json(
+      { erreur: "Merci d'accepter les conditions générales de vente pour commander." },
+      { status: 400 },
+    );
+  }
+
   // Les prix, le droit de commander et la composition des menus sont toujours
   // relus côté serveur : ce que le navigateur envoie n'est jamais utilisé pour
   // calculer le montant, et une requête forgée ne peut glisser ni un produit de
@@ -137,7 +149,7 @@ export async function POST(req: Request) {
 
   const journaliser = (reglement: string) =>
     console.info(
-      `[commande ${reference}] ${detailCuisine} — ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${reglement} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""}`,
+      `[commande ${reference}] ${detailCuisine} — ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${reglement} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""} — CGV ${CGV.version}`,
     );
 
   /**
@@ -237,6 +249,8 @@ export async function POST(req: Request) {
         nom: client.nom,
         telephone: client.telephone,
         etablissement: RESTAURANT.nom,
+        // Version des CGV acceptée : utile en cas de litige ou de remboursement.
+        cgv: CGV.version,
       },
       // Après validation (3D Secure compris), Stripe renvoie ici ; la page
       // relit la session côté serveur avant d'afficher « payé ».

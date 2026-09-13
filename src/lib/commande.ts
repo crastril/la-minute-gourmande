@@ -20,6 +20,11 @@ export type Ticket = {
   };
   note?: string | null;
   lignes: { quantite: number; nom: string; detail?: string | null; montant: number }[];
+  /**
+   * Lien vers le paiement dans le tableau de bord Stripe : c'est de là qu'on
+   * rembourse une commande annulée ou un produit indisponible.
+   */
+  lienStripe?: string | null;
 };
 
 /** Les champs saisis par le client sont insérés dans du HTML : on les échappe. */
@@ -54,6 +59,7 @@ export function ticketTexte(ticket: Ticket): string {
     `Téléphone : ${ticket.client.telephone || "—"}`,
     ticket.client.email ? `E-mail : ${ticket.client.email}` : null,
     ticket.note ? `\nNote pour la cuisine : ${ticket.note}` : null,
+    ticket.lienStripe ? `\nPaiement dans Stripe (remboursement) : ${ticket.lienStripe}` : null,
   ]
     .filter((ligne): ligne is string => ligne !== null)
     .join("\n");
@@ -101,6 +107,11 @@ export function ticketHtml(ticket: Ticket): string {
         ${
           ticket.note
             ? `<div style="margin-top:16px;padding:12px 14px;border-radius:10px;background:#f4d8b3;font-size:15px;color:#171513"><strong>Note pour la cuisine :</strong><br>${echapper(ticket.note)}</div>`
+            : ""
+        }
+        ${
+          ticket.lienStripe
+            ? `<div style="margin-top:20px;font-size:13px;color:#6f6254">Annulation ou produit indisponible : <a href="${echapper(ticket.lienStripe)}" style="color:#b8410f">ouvrir le paiement dans Stripe pour rembourser</a></div>`
             : ""
         }
       </div>

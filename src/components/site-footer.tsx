@@ -89,6 +89,9 @@ export function SiteFooter() {
             © {new Date().getFullYear()} {RESTAURANT.nom} {RESTAURANT.suffixe}
           </p>
           <nav className="flex gap-5 font-display tracking-wide">
+            <Link href="/cgv" className="transition-colors hover:text-orange">
+              CGV
+            </Link>
             <Link href="/mentions-legales" className="transition-colors hover:text-orange">
               Mentions légales
             </Link>

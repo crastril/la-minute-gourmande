@@ -41,7 +41,8 @@ Toutes appliquées par `/api/checkout`, et pas seulement dans l'interface :
 1. un produit de vitrine est rejeté, même si la requête est forgée à la main ;
 2. une commande doit contenir au moins un **menu, un plat ou un burger** ; une boisson seule ne suffit pas ;
 3. le créneau doit appartenir à la liste du midi (11h30 → 13h30) ;
-4. la composition d'un menu est revérifiée (plat et dessert doivent figurer dans le menu) et son prix recalculé.
+4. la composition d'un menu est revérifiée (plat et dessert doivent figurer dans le menu) et son prix recalculé ;
+5. les **conditions générales de vente** doivent avoir été acceptées ; leur version est enregistrée avec la commande.
 
 **Stack** : Next.js 16 (App Router, React Compiler, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Stripe (Checkout Sessions + Payment Element) · Resend · déploiement Vercel.
 
@@ -69,12 +70,15 @@ Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour d
 
 ## ⚠️ Ce qui reste à confirmer ou fournir
 
-**Déjà intégré** : logo, palette, typographies, coordonnées, date d'ouverture (dossier `identité/`) et **produits et prix du menu imprimé**. Le détail de l'identité visuelle est dans [`public/brand/LISEZ-MOI.md`](public/brand/LISEZ-MOI.md).
+**Déjà intégré** : logo, palette, typographies, coordonnées, date d'ouverture (dossier `identité/`), **produits et prix du menu imprimé**, et un **modèle de CGV** pour la vente à emporter. Le détail de l'identité visuelle est dans [`public/brand/LISEZ-MOI.md`](public/brand/LISEZ-MOI.md).
 
 | À fournir | Où ça se branche |
 | --- | --- |
 | **Prix des menus** (ce que la boisson incluse ajoute au prix du plat) | `src/data/menu.ts`, champ `supplementMenu` du `menu-du-midi` |
-| **CGV et mentions légales complètes** (obligatoires pour vendre en ligne) | `src/app/mentions-legales/page.tsx`, page CGV à créer |
+| **Compléments des CGV** : forme juridique, SIRET, immatriculation, TVA, médiateur de la consommation, moyens de paiement acceptés au comptoir | passages entre crochets de `src/app/cgv/page.tsx` |
+| **Validation des règles d'annulation** (délai d'annulation, conservation d'une commande non retirée) | `src/data/cgv.ts` |
+| **Relecture des CGV** par un professionnel du droit | avant d'encaisser des paiements |
+| **Mentions légales complètes** | `src/app/mentions-legales/page.tsx` |
 | **Allergènes** (information obligatoire en restauration) | `src/data/menu.ts`, champ `allergenes` de chaque produit |
 | **Photos et descriptions** des plats | `public/photos/` puis champs `image` et `description` |
 | **Horaires d'ouverture** | `src/data/restaurant.ts` |
@@ -101,7 +105,7 @@ src/
     carte/                      Carte complète, ancres par catégorie
     panier/                     Récapitulatif + créneau + règlement + paiement intégré
     commande/confirmee/         Confirmation (paiement revérifié auprès de Stripe)
-    a-propos/  contact/  mentions-legales/
+    cgv/  a-propos/  contact/  mentions-legales/
     api/checkout/route.ts       Création de la commande (session Stripe ou e-mail au retrait)
     api/stripe/webhook/route.ts Webhook Stripe : commande payée → e-mail à la boutique
     api/contact/route.ts        Contact (Resend ou logs)
@@ -120,6 +124,7 @@ src/
   data/
     menu.ts                     Catalogue, menus à composer, prix et validation
     restaurant.ts               Coordonnées, horaires, créneaux du midi
+    cgv.ts                      Version des CGV et règles d'annulation
   lib/
     commande.ts                 Récapitulatif de commande (texte et HTML de l'e-mail)
     email.ts                    Envoi d'e-mail via Resend (ou logs)
@@ -141,6 +146,16 @@ Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans 
 
 ---
 
+## Conditions générales de vente
+
+La page `/cgv` est un **modèle pour la vente à emporter avec retrait sur place** : identification du vendeur, produits et allergènes, prix, commande, paiement, retrait, absence de droit de rétractation, annulation, réclamations, données personnelles, médiation.
+
+- **Pas de droit de rétractation** : l'article L221-28 du Code de la consommation l'exclut pour les denrées périssables et la restauration fournie à une date déterminée. Les CGV le disent explicitement, et la case du panier le rappelle.
+- **Acceptation obligatoire** : une case à cocher dans le panier, revérifiée par `/api/checkout`. La version acceptée (`CGV.version`) est enregistrée dans les métadonnées de la commande Stripe.
+- **Règles commerciales paramétrables** dans `src/data/cgv.ts` : délai d'annulation, conservation d'une commande non retirée, délai de remboursement. Toute modification des CGV impose de changer `version`.
+
+---
+
 ## Paiement en ligne
 
 ### Paiement intégré au site
@@ -155,7 +170,7 @@ Le paiement se fait **sur le site, sans redirection** : Stripe Checkout Sessions
 
 ### Déroulé d'une commande payée en ligne
 
-1. Le client remplit le retrait et choisit « Payer maintenant ».
+1. Le client remplit le retrait, accepte les CGV et choisit « Payer maintenant ».
 2. `/api/checkout` recalcule le montant et crée une session Stripe ; le navigateur reçoit son `client_secret`.
 3. Le panier est figé et les champs de paiement remplacent le formulaire.
 4. Après validation, Stripe renvoie vers `/commande/confirmee?session_id=…`. La page **relit la session chez Stripe** : un identifiant recopié ou inventé n'affiche jamais « payé ».
@@ -163,16 +178,38 @@ Le paiement se fait **sur le site, sans redirection** : Stripe Checkout Sessions
 
 Une commande **à régler au retrait** envoie l'e-mail immédiatement. Si l'envoi échoue, le client en est averti plutôt que de recevoir une confirmation que personne ne lirait. Côté webhook, un échec renvoie une erreur à Stripe, qui réessaie plus tard : un e-mail peut arriver en double, une commande ne peut pas être perdue.
 
+### Annulations et remboursements
+
+Une commande payée en ligne ne s'« annule » pas dans Stripe : **on la rembourse**, en totalité ou en partie. L'e-mail de chaque commande payée contient un **lien direct vers le paiement** dans le tableau de bord Stripe.
+
+Pour rembourser : ouvrir le lien de l'e-mail (ou Stripe → Paiements → retrouver le paiement), menu « … » → **Rembourser le paiement**, laisser le montant total ou saisir un montant partiel, choisir un motif, valider.
+
+| Situation | Que faire |
+| --- | --- |
+| Le client annule **avant** le délai prévu par les CGV | remboursement total |
+| Le client annule **après** ce délai, ou ne vient pas | pas de remboursement (CGV, denrées préparées) ; geste commercial possible |
+| Un produit n'est **plus disponible** | appeler le client : remplacement, ou remboursement **partiel** du produit concerné (ou total si le client annule) |
+| **Erreur de la boutique**, fermeture exceptionnelle | remboursement total |
+| Commande **à régler au retrait** | rien à rembourser : prévenir le client par téléphone |
+
+À savoir :
+
+- **Stripe ne restitue pas ses frais** sur un remboursement : chaque remboursement coûte les frais de la transaction d'origine ;
+- le remboursement est **prélevé sur le solde Stripe** ; si le solde est insuffisant, il reste en attente jusqu'aux prochains encaissements ;
+- le client voit le remboursement sur son compte après un délai qui dépend de sa banque ;
+- la version des CGV acceptée et la référence de commande figurent dans les métadonnées du paiement.
+
 ### Un compte Stripe dédié
 
 Le site est branché sur **le compte Stripe de Minute Gourmande**, séparé de tout autre projet. Aucun identifiant de compte n'est écrit dans le code : le compte utilisé découle uniquement des variables d'environnement.
 
-Garde-fous de `src/lib/stripe.ts`, qui désactivent le paiement en ligne plutôt que de le laisser échouer chez le client :
+Garde-fous de `src/lib/stripe.ts` :
 
 - clé secrète ou publique au format inattendu ;
 - clé `sk_live_` hors production (pas de vrai débit pendant les tests) ;
-- clé publique manquante ;
-- clé publique et clé secrète de **modes différents** (test / live).
+- clé publique manquante, ou de **mode différent** de la clé secrète (test / live) : le paiement en ligne n'est plus proposé.
+
+Le webhook et la page de confirmation n'utilisent que la clé secrète : une clé publique mal configurée coupe l'affichage du paiement, mais pas la transmission des commandes déjà payées.
 
 `npm run stripe:verifier` affiche le compte réellement branché et contrôle la configuration locale.
 
@@ -185,7 +222,7 @@ Dans `.env.local` : `STRIPE_SECRET_KEY=sk_test_…` et `STRIPE_PUBLISHABLE_KEY=p
 À faire dans cet ordre, **avant** d'annoncer le paiement en ligne :
 
 1. **Activer le compte Stripe** : vérification d'identité terminée et RIB renseigné (`npm run stripe:verifier` doit afficher « Encaissements actifs : oui »).
-2. **Publier les CGV et des mentions légales complètes** : obligatoires pour vendre en ligne, et contrôlées par Stripe.
+2. **Compléter et faire relire les CGV**, compléter les **mentions légales** : obligatoires pour vendre en ligne, et contrôlées par Stripe.
 3. **Créer le webhook live** dans Stripe → Développeurs → Webhooks :
    - URL : `https://la-minute-gourmande.vercel.app/api/stripe/webhook` (puis le domaine définitif) ;
    - événements : `checkout.session.completed` et `checkout.session.async_payment_succeeded` ;
@@ -195,9 +232,9 @@ Dans `.env.local` : `STRIPE_SECRET_KEY=sk_test_…` et `STRIPE_PUBLISHABLE_KEY=p
 6. **Redéployer** : les variables d'environnement ne s'appliquent qu'au déploiement suivant.
 7. **Faire le ménage des moyens de paiement** dans Stripe → Paramètres → Moyens de paiement : garder carte, Link, Apple Pay et Google Pay ; désactiver ceux qui ne servent pas en Martinique (Bancontact, EPS, Klarna, MB Way, Satispay…).
 8. **Enregistrer le domaine** pour Apple Pay et Google Pay (Paramètres → Domaines des moyens de paiement).
-9. **Tester avec une vraie carte** sur une petite commande, vérifier la réception de l'e-mail, puis rembourser depuis le tableau de bord.
+9. **Tester avec une vraie carte** sur une petite commande, vérifier la réception de l'e-mail, puis rembourser depuis le lien de l'e-mail.
 
-**Non implémenté à ce stade** (à décider avec le client) : e-mail de confirmation au client (les reçus Stripe peuvent être activés dans les paramètres du compte), back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
+**Non implémenté à ce stade** (à décider avec le client) : e-mail de confirmation au client (les reçus Stripe peuvent être activés dans les paramètres du compte), bouton de remboursement intégré au site, back-office de suivi des commandes, gestion des ruptures de stock en temps réel.
 
 ---
 

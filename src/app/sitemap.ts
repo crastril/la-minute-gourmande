@@ -6,6 +6,7 @@ const PAGES = [
   { chemin: "/carte", priorite: 0.9 },
   { chemin: "/a-propos", priorite: 0.6 },
   { chemin: "/contact", priorite: 0.6 },
+  { chemin: "/cgv", priorite: 0.2 },
   { chemin: "/mentions-legales", priorite: 0.2 },
 ];
 
