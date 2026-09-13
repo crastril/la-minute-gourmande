@@ -20,18 +20,17 @@ Menus, plats chauds et burgers s'affichent en grandes cartes ; les autres catég
 
 ### Menus à composer
 
-Un produit qui porte une `composition` est un **menu** : le bouton « Composer mon menu » ouvre une fenêtre où l'on choisit son **plat**, sa **boisson**, et, en option, une **glace** en dessert. Le menu n'est ajouté au panier qu'une fois plat et boisson choisis.
+Un produit qui porte une `composition` est un **menu** : le bouton « Composer mon menu » ouvre une fenêtre où l'on choisit son **plat** et, en option, une **glace** en dessert. La **boisson est incluse** : elle ne se choisit pas en ligne. Le menu n'est ajouté au panier qu'une fois le plat choisi.
 
 ```ts
 composition: {
   plats: ["poulet-frites", "poisson-frit-marine"],
-  boissons: BOISSONS.map((b) => b.id),   // toutes les boissons de la carte
-  desserts: GLACES.map((g) => g.id),     // les glaces, facturées à leur prix
-  remise: 0,                             // centimes, à régler selon le prix du menu
+  desserts: GLACES.map((g) => g.id),   // les glaces, facturées à leur prix
+  supplementMenu: 0,                   // centimes ajoutés au plat pour la boisson incluse
 }
 ```
 
-**Prix du menu** : somme plat + boisson + dessert, moins la `remise`. Le « dès … » affiché est celui de la composition la moins chère, recalculé automatiquement depuis les prix de la carte. Tant que le client n'a pas donné sa règle de prix, la remise vaut 0.
+**Prix du menu** : prix du plat + `supplementMenu` + glace éventuelle. Le « dès … » affiché est celui du plat le moins cher, recalculé automatiquement depuis les prix de la carte. Tant que le client n'a pas donné le prix de ses menus, le supplément vaut 0 : le menu coûte le prix du plat, boisson incluse.
 
 Deux menus composés différemment occupent deux lignes du panier ; deux menus identiques fusionnent.
 
@@ -42,7 +41,7 @@ Toutes appliquées par `/api/checkout`, et pas seulement dans l'interface :
 1. un produit de vitrine est rejeté, même si la requête est forgée à la main ;
 2. une commande doit contenir au moins un **menu, un plat ou un burger** ; une boisson seule ne suffit pas ;
 3. le créneau doit appartenir à la liste du midi (11h30 → 13h30) ;
-4. la composition d'un menu est revérifiée (plat, boisson et dessert doivent figurer dans le menu) et son prix recalculé.
+4. la composition d'un menu est revérifiée (plat et dessert doivent figurer dans le menu) et son prix recalculé.
 
 Le client choisit ensuite son règlement : **en ligne** (Stripe Checkout) ou **au retrait**. Sans clé Stripe configurée, l'option « payer maintenant » est affichée comme bientôt disponible et seul le règlement au retrait est possible.
 
@@ -76,7 +75,7 @@ Le site tourne sur http://localhost:3000. **Aucune clé n'est nécessaire pour d
 
 | À fournir | Où ça se branche |
 | --- | --- |
-| **Prix des menus** (remise par rapport aux prix à la carte) | `src/data/menu.ts`, champ `remise` du `menu-du-midi` |
+| **Prix des menus** (ce que la boisson incluse ajoute au prix du plat) | `src/data/menu.ts`, champ `supplementMenu` du `menu-du-midi` |
 | **Allergènes** (information obligatoire en restauration) | `src/data/menu.ts`, champ `allergenes` de chaque produit |
 | **Photos et descriptions** des plats | `public/photos/` puis champs `image` et `description` |
 | **Horaires d'ouverture** | `src/data/restaurant.ts` |
@@ -138,7 +137,7 @@ Le panier vit dans un **store externe** lu via `useSyncExternalStore`, pas dans 
 
 `/api/checkout` **ne fait jamais confiance aux prix envoyés par le navigateur**. Il relit chaque produit dans `src/data/menu.ts`, rejette les identifiants inconnus, les produits épuisés, les quantités hors bornes (1 à 20) et les compositions de menu invalides, puis recalcule le montant côté serveur. Les formulaires publics sont protégés par un pot de miel anti-robot.
 
-La composition des menus figure dans la description de chaque ligne Stripe et dans le journal serveur, par exemple : `2× Menu du midi (Poulet frites · Coca-Cola · Magnum)`.
+La composition des menus figure dans la description de chaque ligne Stripe et dans le journal serveur, par exemple : `2× Menu du midi (Poulet frites · boisson incluse · Magnum)`.
 
 ---
 

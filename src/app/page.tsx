@@ -174,8 +174,9 @@ export default function Accueil() {
             </div>
           </div>
 
+          {/* Masqué sur mobile : trop imposant sous le titre ; le logo reste dans l'en-tête. */}
           <div
-            className="animate-rise relative isolate mx-auto w-full max-w-[440px]"
+            className="animate-rise relative isolate mx-auto hidden w-full max-w-[440px] md:block"
             style={{ animationDelay: "200ms" }}
           >
             {/* Coups de pinceau orange, repris de l'enseigne */}

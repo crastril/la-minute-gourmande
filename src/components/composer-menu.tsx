@@ -16,7 +16,7 @@ function classeChoix(actif: boolean) {
 
 /**
  * Bouton « Composer mon menu » + fenêtre modale de composition :
- * plat au choix, boisson au choix, dessert en option.
+ * plat au choix, boisson incluse, glace en option.
  * Utilise <dialog> natif : focus piégé, Échap et retour du focus gérés par le
  * navigateur.
  */
@@ -26,7 +26,6 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
   const minuteur = useRef<number | undefined>(undefined);
 
   const [plat, setPlat] = useState<string | null>(null);
-  const [boisson, setBoisson] = useState<string | null>(null);
   const [dessert, setDessert] = useState("");
   const [confirme, setConfirme] = useState(false);
 
@@ -35,16 +34,11 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
   const composition = produit.composition;
   if (!composition) return null;
 
-  const complet = plat !== null && boisson !== null;
-  const total = prixMenu(produit, {
-    plat: plat ?? undefined,
-    boisson: boisson ?? undefined,
-    dessert: dessert || undefined,
-  });
+  const complet = plat !== null;
+  const total = prixMenu(produit, { plat: plat ?? undefined, dessert: dessert || undefined });
 
   const ouvrir = () => {
     setPlat(null);
-    setBoisson(null);
     setDessert("");
     dialogue.current?.showModal();
   };
@@ -52,8 +46,8 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
   const fermer = () => dialogue.current?.close();
 
   const valider = () => {
-    if (plat === null || boisson === null) return;
-    ajouter(produit.id, 1, { plat, boisson, ...(dessert ? { dessert } : {}) });
+    if (plat === null) return;
+    ajouter(produit.id, 1, { plat, ...(dessert ? { dessert } : {}) });
     fermer();
     setConfirme(true);
     window.clearTimeout(minuteur.current);
@@ -91,7 +85,8 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                 {produit.nom}
               </h2>
               <p className="mt-2 text-sm text-encre-douce">
-                Plat et boisson au choix · glace en dessert si vous voulez
+                Plat au choix · <strong className="font-semibold text-encre">boisson incluse</strong>{" "}
+                · glace en dessert si vous voulez
               </p>
             </div>
             <button
@@ -127,7 +122,9 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
                       <span className="font-display text-lg font-bold tracking-[0.02em] uppercase">
                         {choix.nom}
                       </span>
-                      <span className="chiffres text-orange-fonce">{prix(choix.prix)}</span>
+                      <span className="chiffres text-orange-fonce">
+                        {prix(choix.prix + composition.supplementMenu)}
+                      </span>
                     </label>
                   );
                 })}
@@ -135,34 +132,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
             </fieldset>
 
             <fieldset>
-              <legend className="sur-titre mb-3">2 · Votre boisson</legend>
-              <div className="flex flex-wrap gap-2">
-                {composition.boissons.map((id) => {
-                  const choix = CATALOGUE.get(id);
-                  if (!choix) return null;
-                  return (
-                    <label
-                      key={id}
-                      className={`${carteChoix} flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${classeChoix(boisson === id)}`}
-                    >
-                      <input
-                        type="radio"
-                        name={`${produit.id}-boisson`}
-                        value={id}
-                        checked={boisson === id}
-                        onChange={() => setBoisson(id)}
-                        className="sr-only"
-                      />
-                      {choix.nom}
-                      <span className="chiffres text-encre-pale">{prix(choix.prix)}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend className="sur-titre mb-3">3 · Une glace en dessert ?</legend>
+              <legend className="sur-titre mb-3">2 · Une glace en dessert ?</legend>
               <div className="grid gap-2 sm:grid-cols-2">
                 {[
                   { id: "", nom: "Sans dessert", tarif: 0 },
@@ -207,7 +177,7 @@ export function ComposerMenu({ produit }: { produit: Produit }) {
               disabled={!complet}
               className="rounded-full bg-orange px-6 py-3.5 font-display text-[1rem] font-semibold tracking-[0.08em] text-encre uppercase transition-colors hover:bg-orange-vif disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {complet ? "Ajouter au panier" : "Choisissez plat et boisson"}
+              {complet ? "Ajouter au panier" : "Choisissez votre plat"}
             </button>
           </footer>
         </div>

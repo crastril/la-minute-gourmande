@@ -12,8 +12,9 @@
  *    lignes, faute de savoir à quel format correspond la première ;
  *  — le « Riz poisson frit » demandé pour le menu est rapproché du « Poisson
  *    frit mariné » de la carte (10,00 €) ;
- *  — le prix du menu : aucune règle fournie, il vaut donc la somme des choix.
- *    Ajuster le champ `remise` quand le client aura donné son prix de menu.
+ *  — le prix du menu : la boisson est incluse, mais aucun prix de menu n'a été
+ *    donné. Le menu coûte donc le prix du plat ; ajuster `supplementMenu` si le
+ *    menu coûte plus cher que le plat seul.
  *
  * Structure :
  *   — `commandable: false` : VITRINE, visible sur le site mais achetée au
@@ -22,15 +23,15 @@
  *   — `commandable: true` : réservable en ligne, payée en ligne ou au retrait ;
  *   — `affichage: "liste"` : liste de prix compacte, comme le menu imprimé,
  *     plutôt que de grandes cartes illustrées ;
- *   — `composition` : MENU à composer dans une fenêtre (plat, boisson, dessert
- *     en option), par identifiants d'autres produits du catalogue.
+ *   — `composition` : MENU à composer dans une fenêtre (plat au choix, boisson
+ *     incluse, glace en option), par identifiants d'autres produits du catalogue.
  */
 
 export const CATEGORIES = [
   {
     id: "menus",
     nom: "Menus",
-    intro: "Votre plat et votre boisson au choix, une glace en dessert si vous voulez. À réserver pour le midi.",
+    intro: "Votre plat au choix, boisson incluse, une glace en dessert si vous voulez. À réserver pour le midi.",
     commandable: true,
     affichage: "cartes",
   },
@@ -90,10 +91,9 @@ export type CategorieId = (typeof CATEGORIES)[number]["id"];
 /** Catégories dont au moins un article est exigé pour valider une commande. */
 export const CATEGORIES_PRINCIPALES: CategorieId[] = ["menus", "plats", "burgers"];
 
-/** Les choix faits par le client en composant un menu. */
+/** Les choix faits par le client en composant un menu (la boisson est incluse). */
 export type ChoixMenu = {
   plat: string;
-  boisson: string;
   /** Optionnel : facturé à son prix de la carte. */
   dessert?: string;
 };
@@ -101,20 +101,19 @@ export type ChoixMenu = {
 /** Ce qu'un menu propose, par identifiants de produits du catalogue. */
 export type CompositionMenu = {
   plats: string[];
-  boissons: string[];
   /** Desserts proposés en option, facturés à leur prix de la carte. */
   desserts: string[];
   /**
-   * Remise en centimes sur la somme plat + boisson + dessert.
-   * ⚠️ 0 tant que le client n'a pas indiqué le prix de ses menus.
+   * Ce que la boisson incluse ajoute au prix du plat, en centimes.
+   * ⚠️ 0 tant que le client n'a pas donné le prix de ses menus.
    */
-  remise: number;
+  supplementMenu: number;
 };
 
 export type Produit = {
   id: string;
   nom: string;
-  /** Prix TTC en centimes. Pour un menu : calculé (composition la moins chère). */
+  /** Prix TTC en centimes. Pour un menu : calculé (plat le moins cher). */
   prix: number;
   categorie: CategorieId;
   description?: string;
@@ -167,16 +166,15 @@ export const PRODUITS: Produit[] = [
   {
     id: "menu-du-midi",
     nom: "Menu du midi",
-    description: "Votre plat et votre boisson au choix. Ajoutez une glace en dessert si vous voulez.",
-    prix: 0, // calculé plus bas : composition la moins chère
+    description: "Votre plat au choix, boisson incluse. Ajoutez une glace en dessert si vous voulez.",
+    prix: 0, // calculé plus bas : plat le moins cher
     categorie: "menus",
-    tags: ["Plat + boisson", "Glace en option"],
+    tags: ["Boisson incluse", "Glace en option"],
     duJour: true,
     composition: {
       plats: ["poulet-frites", "poisson-frit-marine"],
-      boissons: BOISSONS.map((b) => b.id),
       desserts: GLACES.map((g) => g.id),
-      remise: 0,
+      supplementMenu: 0,
     },
   },
 
@@ -258,19 +256,19 @@ function prixDe(id: string): number {
 }
 
 /**
- * Prix d'un menu selon les choix faits : somme plat + boisson + dessert, moins
- * la remise. Un choix pas encore fait compte pour l'option la moins chère, ce
- * qui donne le « dès … » affiché avant composition.
+ * Prix d'un menu selon les choix faits : prix du plat + supplément menu
+ * (boisson incluse) + glace éventuelle. Tant que le plat n'est pas choisi, on
+ * compte le moins cher, ce qui donne le « dès … » affiché avant composition.
  */
 export function prixMenu(produit: Produit, choix: Partial<ChoixMenu>): number {
   const composition = produit.composition;
   if (!composition) return produit.prix;
 
-  const moinsCher = (ids: string[]) => Math.min(...ids.map(prixDe));
-  const plat = choix.plat ? prixDe(choix.plat) : moinsCher(composition.plats);
-  const boisson = choix.boisson ? prixDe(choix.boisson) : moinsCher(composition.boissons);
+  const plat = choix.plat
+    ? prixDe(choix.plat)
+    : Math.min(...composition.plats.map(prixDe));
   const dessert = choix.dessert ? prixDe(choix.dessert) : 0;
-  return Math.max(0, plat + boisson + dessert - composition.remise);
+  return plat + composition.supplementMenu + dessert;
 }
 
 // Le prix affiché d'un menu suit automatiquement les prix de la carte.
@@ -281,20 +279,20 @@ for (const produit of PRODUITS) {
 /**
  * Vérifie une composition de menu contre ce que le menu propose.
  * Partagée entre le navigateur et l'API : un choix forgé à la main (plat
- * absent du menu, dessert inconnu…) est rejeté des deux côtés.
+ * absent du menu, dessert inconnu…) est rejeté des deux côtés. Un éventuel
+ * champ `boisson` (ancien panier) est simplement ignoré : la boisson est incluse.
  */
 export function validerChoix(produit: Produit, choix: unknown): ChoixMenu | null {
   const composition = produit.composition;
   if (!composition || typeof choix !== "object" || choix === null) return null;
 
-  const { plat, boisson, dessert } = choix as Record<string, unknown>;
+  const { plat, dessert } = choix as Record<string, unknown>;
   if (typeof plat !== "string" || !composition.plats.includes(plat)) return null;
-  if (typeof boisson !== "string" || !composition.boissons.includes(boisson)) return null;
 
   const sansDessert = dessert === undefined || dessert === null || dessert === "";
-  if (sansDessert) return { plat, boisson };
+  if (sansDessert) return { plat };
   if (typeof dessert !== "string" || !composition.desserts.includes(dessert)) return null;
-  return { plat, boisson, dessert };
+  return { plat, dessert };
 }
 
 /** Prix d'une unité : prix de la carte, ou prix du menu selon sa composition. */
@@ -302,18 +300,18 @@ export function prixUnitaire(produit: Produit, choix?: ChoixMenu): number {
   return produit.composition && choix ? prixMenu(produit, choix) : produit.prix;
 }
 
-/** « Poulet frites · Coca-Cola · Magnum », ou null hors menu. */
+/** « Poulet frites · boisson incluse · Magnum », ou null hors menu. */
 export function libelleChoix(choix?: ChoixMenu): string | null {
   if (!choix) return null;
-  return [choix.plat, choix.boisson, choix.dessert]
-    .filter((id): id is string => Boolean(id))
-    .map((id) => CATALOGUE.get(id)?.nom ?? id)
+  const nom = (id: string) => CATALOGUE.get(id)?.nom ?? id;
+  return [nom(choix.plat), "boisson incluse", choix.dessert ? nom(choix.dessert) : null]
+    .filter((partie): partie is string => Boolean(partie))
     .join(" · ");
 }
 
 /** Deux menus composés différemment occupent deux lignes distinctes du panier. */
 export function cleLigne(id: string, choix?: ChoixMenu): string {
-  return choix ? `${id}|${choix.plat}|${choix.boisson}|${choix.dessert ?? ""}` : id;
+  return choix ? `${id}|${choix.plat}|${choix.dessert ?? ""}` : id;
 }
 
 export function produitsParCategorie(categorie: CategorieId): Produit[] {
