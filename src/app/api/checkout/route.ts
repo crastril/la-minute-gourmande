@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { CATALOGUE, estCommandable, estPrincipal } from "@/data/menu";
+import {
+  CATALOGUE,
+  estCommandable,
+  estPrincipal,
+  libelleChoix,
+  prixUnitaire,
+  validerChoix,
+  type ChoixMenu,
+  type Produit,
+} from "@/data/menu";
 import { CRENEAUX, RESTAURANT } from "@/data/restaurant";
 import { numeroCommande } from "@/lib/format";
 import { resoudreCleStripe } from "@/lib/stripe";
@@ -9,11 +18,18 @@ import { resoudreCleStripe } from "@/lib/stripe";
 type ModePaiement = "enligne" | "comptoir";
 
 type Corps = {
-  lignes?: { id: string; quantite: number }[];
+  lignes?: { id?: unknown; quantite?: unknown; choix?: unknown }[];
   creneau?: string;
   note?: string;
   paiement?: ModePaiement;
   client?: { prenom?: string; nom?: string; email?: string; telephone?: string };
+};
+
+type Article = {
+  produit: Produit;
+  quantite: number;
+  choix?: ChoixMenu;
+  prixUnitaire: number;
 };
 
 function origine(req: Request): string {
@@ -52,17 +68,31 @@ export async function POST(req: Request) {
     );
   }
 
-  // Les prix et le droit de commander sont toujours relus côté serveur : ce que
-  // le navigateur envoie n'est jamais utilisé pour calculer le montant, et un
-  // produit de vitrine (viennoiserie, snacking) ne peut pas être glissé dans
-  // une commande en forgeant la requête.
-  const articles = lignes.flatMap((ligne) => {
-    const produit = CATALOGUE.get(ligne.id);
-    const quantite = Math.floor(Number(ligne.quantite));
-    if (!produit || !estCommandable(produit) || !Number.isFinite(quantite)) return [];
-    if (quantite < 1 || quantite > 20) return [];
-    return [{ produit, quantite }];
-  });
+  // Les prix, le droit de commander et la composition des menus sont toujours
+  // relus côté serveur : ce que le navigateur envoie n'est jamais utilisé pour
+  // calculer le montant, et une requête forgée ne peut glisser ni un produit de
+  // vitrine, ni un plat absent du menu, ni un dessert sans son supplément.
+  const articles: Article[] = [];
+  for (const ligne of lignes) {
+    const produit = typeof ligne?.id === "string" ? CATALOGUE.get(ligne.id) : undefined;
+    const quantite = Math.floor(Number(ligne?.quantite));
+    if (!produit || !estCommandable(produit) || !Number.isFinite(quantite)) continue;
+    if (quantite < 1 || quantite > 20) continue;
+
+    let choix: ChoixMenu | undefined;
+    if (produit.composition) {
+      const valide = validerChoix(produit, ligne.choix);
+      if (!valide) {
+        return NextResponse.json(
+          { erreur: `La composition du « ${produit.nom} » est incomplète ou invalide.` },
+          { status: 400 },
+        );
+      }
+      choix = valide;
+    }
+
+    articles.push({ produit, quantite, choix, prixUnitaire: prixUnitaire(produit, choix) });
+  }
 
   if (articles.length === 0) {
     return NextResponse.json(
@@ -84,12 +114,17 @@ export async function POST(req: Request) {
   }
 
   const reference = numeroCommande();
-  const total = articles.reduce((n, a) => n + a.produit.prix * a.quantite, 0);
+  const total = articles.reduce((n, a) => n + a.prixUnitaire * a.quantite, 0);
   const cleStripe = resoudreCleStripe();
+
+  // Le détail des menus composés est ce dont la cuisine a besoin.
+  const detailCuisine = articles
+    .map((a) => `${a.quantite}× ${a.produit.nom}${a.choix ? ` (${libelleChoix(a.choix)})` : ""}`)
+    .join(", ");
 
   const journaliser = (reglement: string) =>
     console.info(
-      `[commande ${reference}] ${articles.length} article(s), ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${reglement} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""}`,
+      `[commande ${reference}] ${detailCuisine} — ${(total / 100).toFixed(2)} € — retrait ${creneau} — ${reglement} — ${client.prenom} ${client.telephone}${note ? ` — note : ${note}` : ""}`,
     );
 
   const confirmation = `/commande/confirmee?ref=${reference}&creneau=${encodeURIComponent(creneau)}&total=${total}`;
@@ -126,14 +161,16 @@ export async function POST(req: Request) {
       mode: "payment",
       locale: "fr",
       customer_email: client.email?.trim() || undefined,
-      line_items: articles.map(({ produit, quantite }) => ({
+      line_items: articles.map(({ produit, quantite, choix, prixUnitaire: unitaire }) => ({
         quantity: quantite,
         price_data: {
           currency: "eur",
-          unit_amount: produit.prix,
+          unit_amount: unitaire,
           product_data: {
             name: produit.nom,
-            description: produit.description.slice(0, 300),
+            // Pour un menu, la composition remplace la description : c'est
+            // ce que le client et la cuisine doivent relire.
+            description: (libelleChoix(choix) ?? produit.description).slice(0, 300),
           },
         },
       })),

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { RESTAURANT } from "@/data/restaurant";
+import { urlSite } from "@/lib/site";
 
 const PAGES = [
   { chemin: "", priorite: 1 },
@@ -10,7 +10,7 @@ const PAGES = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? RESTAURANT.url;
+  const base = urlSite();
 
   return PAGES.map(({ chemin, priorite }) => ({
     url: `${base}${chemin}`,

@@ -1,0 +1,7 @@
+# Jamais de secrets ni de fichiers bruts du client envoyés sur Vercel.
+.env*
+!.env.example
+identité/
+.claude/
+node_modules/
+.next/

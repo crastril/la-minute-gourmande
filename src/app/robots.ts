@@ -1,8 +1,11 @@
 import type { MetadataRoute } from "next";
-import { RESTAURANT } from "@/data/restaurant";
+import { indexationAutorisee, urlSite } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? RESTAURANT.url;
+  // Version de validation : rien n'est indexé tant que ce n'est pas explicitement autorisé.
+  if (!indexationAutorisee()) {
+    return { rules: { userAgent: "*", disallow: "/" } };
+  }
 
   return {
     rules: {
@@ -10,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/panier", "/commande/", "/api/"],
     },
-    sitemap: `${base}/sitemap.xml`,
+    sitemap: `${urlSite()}/sitemap.xml`,
   };
 }

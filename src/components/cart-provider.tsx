@@ -1,15 +1,29 @@
 "use client";
 
 import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
-import { CATALOGUE, type Produit } from "@/data/menu";
+import {
+  CATALOGUE,
+  cleLigne,
+  libelleChoix,
+  prixUnitaire,
+  validerChoix,
+  type ChoixMenu,
+  type Produit,
+} from "@/data/menu";
 
-const CLE_STOCKAGE = "lmg.panier.v1";
+// v2 : les lignes de menu portent la composition choisie par le client.
+const CLE_STOCKAGE = "lmg.panier.v2";
 
-export type LignePanier = { id: string; quantite: number };
+export type LignePanier = { id: string; quantite: number; choix?: ChoixMenu };
 
 export type LigneDetaillee = LignePanier & {
+  /** Identifie la ligne : un même menu composé autrement est une autre ligne. */
+  cle: string;
   produit: Produit;
+  prixUnitaire: number;
   sousTotal: number;
+  /** « Poulet frites · Canette 33 cl » pour un menu, null sinon. */
+  composition: string | null;
 };
 
 /* ————————————————————————————————————————————————————————————
@@ -25,25 +39,36 @@ let etat: LignePanier[] = VIDE;
 let chargeDepuisStockage = false;
 const abonnes = new Set<() => void>();
 
+/**
+ * Valide une ligne venue du stockage ou d'un ajout. Un produit retiré de la
+ * carte, ou un menu dont la composition n'est plus proposée, est écarté.
+ */
+function normaliser(brut: unknown): LignePanier | null {
+  if (typeof brut !== "object" || brut === null) return null;
+  const { id, quantite, choix } = brut as Record<string, unknown>;
+  if (typeof id !== "string" || typeof quantite !== "number") return null;
+
+  const produit = CATALOGUE.get(id);
+  const q = Math.min(Math.floor(quantite), 20);
+  if (!produit || !(q >= 1)) return null;
+
+  if (produit.composition) {
+    const valide = validerChoix(produit, choix);
+    return valide ? { id, quantite: q, choix: valide } : null;
+  }
+  return { id, quantite: q };
+}
+
 function lireStockage(): LignePanier[] {
   try {
     const brut = window.localStorage.getItem(CLE_STOCKAGE);
     if (!brut) return VIDE;
     const donnees: unknown = JSON.parse(brut);
     if (!Array.isArray(donnees)) return VIDE;
-
-    const lignes = donnees
-      .filter(
-        (l): l is LignePanier =>
-          typeof l === "object" &&
-          l !== null &&
-          typeof (l as LignePanier).id === "string" &&
-          typeof (l as LignePanier).quantite === "number",
-      )
-      // Un produit retiré de la carte ne doit pas ressusciter depuis le stockage.
-      .filter((l) => CATALOGUE.has(l.id) && l.quantite > 0)
-      .map((l) => ({ id: l.id, quantite: Math.min(Math.floor(l.quantite), 20) }));
-
+    const lignes = donnees.flatMap((l) => {
+      const ligne = normaliser(l);
+      return ligne ? [ligne] : [];
+    });
     return lignes.length > 0 ? lignes : VIDE;
   } catch {
     return VIDE;
@@ -96,28 +121,36 @@ const fauxServeur = () => false;
 
 /* ——— Mutations ——— */
 
-function ajouter(id: string, quantite = 1) {
-  if (!CATALOGUE.has(id)) return;
-  const existante = etat.find((l) => l.id === id);
+/** Ajoute un produit ; un menu exige sa composition (`choix`). */
+function ajouter(id: string, quantite = 1, choix?: ChoixMenu) {
+  const nouvelle = normaliser({ id, quantite, choix });
+  if (!nouvelle) return;
+
+  const cle = cleLigne(nouvelle.id, nouvelle.choix);
+  const existante = etat.find((l) => cleLigne(l.id, l.choix) === cle);
   publier(
     existante
       ? etat.map((l) =>
-          l.id === id ? { ...l, quantite: Math.min(l.quantite + quantite, 20) } : l,
+          cleLigne(l.id, l.choix) === cle
+            ? { ...l, quantite: Math.min(l.quantite + nouvelle.quantite, 20) }
+            : l,
         )
-      : [...etat, { id, quantite: Math.min(quantite, 20) }],
+      : [...etat, nouvelle],
   );
 }
 
-function definirQuantite(id: string, quantite: number) {
+function definirQuantite(cle: string, quantite: number) {
   publier(
     quantite <= 0
-      ? etat.filter((l) => l.id !== id)
-      : etat.map((l) => (l.id === id ? { ...l, quantite: Math.min(quantite, 20) } : l)),
+      ? etat.filter((l) => cleLigne(l.id, l.choix) !== cle)
+      : etat.map((l) =>
+          cleLigne(l.id, l.choix) === cle ? { ...l, quantite: Math.min(quantite, 20) } : l,
+        ),
   );
 }
 
-function retirer(id: string) {
-  publier(etat.filter((l) => l.id !== id));
+function retirer(cle: string) {
+  publier(etat.filter((l) => cleLigne(l.id, l.choix) !== cle));
 }
 
 function vider() {
@@ -150,7 +183,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       lignes.flatMap((ligne) => {
         const produit = CATALOGUE.get(ligne.id);
         if (!produit) return [];
-        return [{ ...ligne, produit, sousTotal: produit.prix * ligne.quantite }];
+        const unitaire = prixUnitaire(produit, ligne.choix);
+        return [
+          {
+            ...ligne,
+            cle: cleLigne(ligne.id, ligne.choix),
+            produit,
+            prixUnitaire: unitaire,
+            sousTotal: unitaire * ligne.quantite,
+            composition: libelleChoix(ligne.choix),
+          },
+        ];
       }),
     [lignes],
   );

@@ -1,4 +1,5 @@
 import { AddToCart } from "@/components/add-to-cart";
+import { ComposerMenu } from "@/components/composer-menu";
 import { DishVisual } from "@/components/dish-visual";
 import { estCommandable, type Produit } from "@/data/menu";
 import { prix } from "@/lib/format";
@@ -22,7 +23,9 @@ export function MenuCard({ produit }: { produit: Produit }) {
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-baseline justify-between gap-4">
           <h3 className="font-display text-xl text-encre">{produit.nom}</h3>
-          <span className="chiffres shrink-0 text-sm text-orange-fonce">{prix(produit.prix)}</span>
+          <span className="chiffres shrink-0 text-sm text-orange-fonce">
+            {produit.composition ? `dès ${prix(produit.prix)}` : prix(produit.prix)}
+          </span>
         </div>
 
         <p className="text-sm leading-relaxed text-encre-douce">{produit.description}</p>
@@ -41,12 +44,14 @@ export function MenuCard({ produit }: { produit: Produit }) {
         )}
 
         <div className="mt-auto pt-2">
-          {estCommandable(produit) ? (
-            <AddToCart produit={produit} />
-          ) : (
+          {!estCommandable(produit) ? (
             <span className="chiffres inline-block rounded-ticket border border-encre/10 px-3 py-2 text-[0.65rem] tracking-[0.14em] text-encre-pale uppercase">
               {produit.epuise ? "Épuisé" : "Au comptoir"}
             </span>
+          ) : produit.composition ? (
+            <ComposerMenu produit={produit} />
+          ) : (
+            <AddToCart produit={produit} />
           )}
         </div>
       </div>

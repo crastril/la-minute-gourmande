@@ -88,6 +88,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* La page ne défile pas derrière une fenêtre modale ouverte (composition de menu). */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
   body {
     background-color: var(--color-papier);
     color: var(--color-encre);

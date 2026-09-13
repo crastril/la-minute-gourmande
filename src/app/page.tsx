@@ -15,18 +15,24 @@ import {
 import { MenuCard } from "@/components/menu-card";
 import { Epi, Rameau } from "@/components/ornement";
 import { Reveal } from "@/components/reveal";
-import { produitsDuJour } from "@/data/menu";
+import { PRODUITS, produitsDuJour } from "@/data/menu";
 import { DATE_OUVERTURE, RESTAURANT } from "@/data/restaurant";
+import { prix } from "@/lib/format";
 
 /**
  * ⚠️ Textes à faire relire par le client. Ils reprennent autant que possible
  * les formulations de l'affiche et de l'enseigne.
  */
 
+// Lu dans le catalogue : le bandeau suit automatiquement les vrais prix.
+const PRIX_MENU_MINIMUM = Math.min(
+  ...PRODUITS.filter((p) => p.categorie === "menus").map((p) => p.prix),
+);
+
 const INFOS = [
   { cle: "Retrait", valeur: "11h30 – 13h30" },
   { cle: "Préparation", valeur: `${RESTAURANT.delaiRetrait} min` },
-  { cle: "Menus", valeur: "dès 8,90 €" },
+  { cle: "Menus", valeur: `dès ${prix(PRIX_MENU_MINIMUM)}` },
   { cle: "Règlement", valeur: "En ligne ou sur place" },
 ];
 

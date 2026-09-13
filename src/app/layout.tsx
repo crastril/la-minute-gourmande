@@ -4,6 +4,7 @@ import { CartProvider } from "@/components/cart-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { RESTAURANT } from "@/data/restaurant";
+import { indexationAutorisee, urlSite } from "@/lib/site";
 import "./globals.css";
 
 const anton = Anton({
@@ -35,7 +36,9 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(RESTAURANT.url),
+  // Base des URL absolues (image de partage, liens canoniques) : l'URL Vercel
+  // tant qu'aucun domaine n'est défini, sinon les aperçus de lien seraient cassés.
+  metadataBase: new URL(urlSite()),
   title: {
     default: `${RESTAURANT.nom} — Sandwicherie, pâtisserie & restauration rapide au François`,
     template: `%s · ${RESTAURANT.nom}`,
@@ -60,7 +63,9 @@ export const metadata: Metadata = {
     description:
       "Réservez votre déjeuner en ligne et récupérez-le à l'heure choisie, sans faire la file. Le François, Martinique.",
   },
-  robots: { index: true, follow: true },
+  robots: indexationAutorisee()
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

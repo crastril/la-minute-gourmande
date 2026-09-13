@@ -77,7 +77,7 @@ export function PanierClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lignes: detail.map((l) => ({ id: l.id, quantite: l.quantite })),
+          lignes: detail.map((l) => ({ id: l.id, quantite: l.quantite, choix: l.choix })),
           creneau: donnees.get("creneau"),
           note: donnees.get("note"),
           paiement,
@@ -144,18 +144,21 @@ export function PanierClient({
 
         <ul className="divide-y divide-dashed divide-encre/12">
           {detail.map((ligne) => (
-            <li key={ligne.id} className="flex flex-wrap items-center gap-4 px-6 py-5">
+            <li key={ligne.cle} className="flex flex-wrap items-center gap-4 px-6 py-5">
               <div className="min-w-[9rem] flex-1">
                 <p className="font-display text-lg text-encre">{ligne.produit.nom}</p>
+                {ligne.composition && (
+                  <p className="mt-0.5 text-sm text-encre-douce">{ligne.composition}</p>
+                )}
                 <p className="chiffres mt-1 text-[0.7rem] text-encre-pale">
-                  {prix(ligne.produit.prix)} l&apos;unité
+                  {prix(ligne.prixUnitaire)} l&apos;unité
                 </p>
               </div>
 
               <Stepper
                 valeur={ligne.quantite}
                 libelle={ligne.produit.nom}
-                onChange={(n) => definirQuantite(ligne.id, n)}
+                onChange={(n) => definirQuantite(ligne.cle, n)}
               />
 
               <span className="chiffres w-[4.5rem] text-right text-sm text-orange-fonce">
@@ -164,7 +167,7 @@ export function PanierClient({
 
               <button
                 type="button"
-                onClick={() => retirer(ligne.id)}
+                onClick={() => retirer(ligne.cle)}
                 aria-label={`Retirer ${ligne.produit.nom} du panier`}
                 className="text-encre-pale transition-colors hover:text-brique"
               >
@@ -257,7 +260,7 @@ export function PanierClient({
                 />
                 <span className="block text-sm text-encre">{option.titre}</span>
                 <span className="mt-1 block text-[0.75rem] leading-relaxed text-encre-douce">
-                  {option.disponible ? option.detail : "Momentanément indisponible."}
+                  {option.disponible ? option.detail : "Bientôt disponible : réglez sur place au retrait."}
                 </span>
               </label>
             ))}
