@@ -1,136 +1,131 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { Epi } from "@/components/ornement";
 import { Reveal } from "@/components/reveal";
-import { RESTAURANT } from "@/data/restaurant";
+import { DATE_OUVERTURE, RESTAURANT } from "@/data/restaurant";
 
 export const metadata: Metadata = {
-  title: "La maison",
+  title: "La boutique",
   description:
-    "Une petite maison de cuisine ouverte en 2019 à Bordeaux : circuit court, tout fait maison, rien de congelé.",
+    "Sandwicherie, pâtisserie et restauration rapide au François, en Martinique. Fait maison avec passion.",
 };
 
-const REPERES = [
+/**
+ * ⚠️ Textes à faire valider par le client. Ils ne reprennent que ce que
+ * l'affiche et l'enseigne annoncent déjà — aucun historique n'est inventé.
+ */
+const PILIERS = [
   {
-    annee: "2019",
-    titre: "La boulangerie ouvre",
-    texte: "Le fournil, la vitrine, et une file qui déborde sur le trottoir dès la récréation.",
+    titre: "Pâtisseries maison",
+    texte: "Viennoiseries et gâteaux faits maison, en vitrine chaque jour.",
   },
   {
-    annee: "2022",
-    titre: "La restauration du midi",
-    texte:
-      "Burgers et plats du jour arrivent à la carte, pour ceux qui veulent autre chose qu'un sandwich.",
+    titre: "Snacking gourmand",
+    texte: "Sandwichs, paninis, salades et hot-dogs, à prendre au comptoir.",
   },
   {
-    annee: "2024",
-    titre: "La réservation en ligne",
-    texte:
-      "Pour que les profs et le personnel puissent déjeuner sans passer leur pause entière dans la file.",
+    titre: "Restauration rapide",
+    texte: "Burgers et plats pour le midi, à réserver en ligne pour éviter la file.",
   },
-];
-
-const PRINCIPES = [
-  { t: "Cuit sur place", d: "Le pain, les viennoiseries et les pâtisseries sortent de notre fournil." },
-  { t: "Plusieurs fournées", d: "Le matin, avant la récréation et avant la sortie des cours." },
-  { t: "Rien de congelé", d: "Pas de sauce en poudre, pas de plat réchauffé sous une lampe." },
-  { t: "Prix lisibles", d: "Affichés en vitrine comme en ligne, sans supplément à la caisse." },
+  {
+    titre: "Boissons fraîches",
+    texte: "Jus, boissons fraîches et cafés pour accompagner le tout.",
+  },
 ];
 
 export default function APropos() {
   return (
     <>
-      <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
-        <p className="sur-titre animate-rise">Depuis {RESTAURANT.fondation}</p>
-        <h1 className="animate-veil mt-6 max-w-[15ch] text-[clamp(2.6rem,8vw,6rem)] leading-[0.9]">
-          La boulangerie d&apos;en <span className="text-beurre italic">face</span>.
-        </h1>
-      </section>
+      <section className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 pt-14 pb-20 sm:px-8 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <p className="sur-titre animate-rise">Ouverte le {DATE_OUVERTURE}</p>
+          <h1 className="animate-veil mt-6 text-[clamp(2.8rem,8vw,6rem)] leading-[0.92]">
+            Fait maison
+            <span className="block font-script text-[0.78em] leading-[1.2] text-orange">
+              avec passion
+            </span>
+          </h1>
 
-      <section className="mx-auto grid max-w-[1240px] gap-12 px-5 pb-20 sm:px-8 lg:grid-cols-[1fr_0.85fr]">
-        <Reveal className="flex flex-col gap-5 text-lg leading-relaxed text-creme-doux">
-          <p>
-            {RESTAURANT.nom}, c&apos;est la boulangerie en face du lycée. Le
-            fournil tourne dès six heures et demie, la vitrine se remplit avant
-            la première récréation, et à midi la cuisine prend le relais avec
-            les burgers et le plat du jour.
-          </p>
-          <p>
-            Le problème, on le voit tous les jours : à midi, la file sort sur le
-            trottoir. Un élève a dix minutes, un professeur en a quarante. La
-            réservation en ligne est née de là — vous commandez votre repas, on
-            le prépare pour l&apos;heure que vous avez choisie, vous n&apos;avez
-            plus qu&apos;à passer le prendre.
-          </p>
-          <p className="text-creme">
-            La viennoiserie et le snacking, eux, restent au comptoir : c&apos;est
-            là qu&apos;ils sont les meilleurs, chauds et tout juste sortis du four.
-          </p>
-        </Reveal>
-
-        <Reveal delai={140}>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-ticket border border-creme/10">
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(75% 60% at 35% 25%, rgba(231,163,60,0.26) 0%, transparent 62%),
-                  linear-gradient(155deg, #251e16, #14110d)
-                `,
-              }}
-            />
-            <p className="chiffres absolute bottom-5 left-5 text-[0.6rem] tracking-[0.2em] text-creme-tres-doux uppercase">
-              ⚠ Visuel provisoire — portrait du chef à venir
+          <div
+            className="animate-rise mt-8 flex max-w-[54ch] flex-col gap-5 text-lg leading-relaxed text-encre-douce"
+            style={{ animationDelay: "240ms" }}
+          >
+            <p>
+              {RESTAURANT.nom}, c&apos;est une sandwicherie, une pâtisserie et un
+              comptoir de restauration rapide, au {RESTAURANT.adresse}, au
+              François — en face du lycée.
+            </p>
+            <p>
+              Le matin et à la récré, c&apos;est la vitrine qui travaille :
+              viennoiseries, gâteaux, sandwichs et paninis, à prendre au comptoir.
+              À midi, la cuisine prend le relais avec les burgers et les plats.
+            </p>
+            <p className="text-encre">
+              Et parce qu&apos;à midi la file déborde vite, les menus et les plats
+              se réservent en ligne : vous choisissez votre heure, votre commande
+              vous attend.
             </p>
           </div>
-        </Reveal>
-      </section>
+        </div>
 
-      <section className="filet bg-encre/40">
-        <div className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
-          <Reveal>
-            <p className="sur-titre">Nos quatre règles</p>
-          </Reveal>
-          <dl className="mt-10 grid gap-px overflow-hidden rounded-ticket bg-creme/10 sm:grid-cols-2">
-            {PRINCIPES.map((p, i) => (
-              <Reveal key={p.t} delai={i * 90}>
-                <div className="h-full bg-noir p-8">
-                  <dt className="font-display text-2xl text-creme">{p.t}</dt>
-                  <dd className="mt-3 text-sm leading-relaxed text-creme-doux">{p.d}</dd>
-                </div>
-              </Reveal>
-            ))}
-          </dl>
+        <div
+          className="animate-rise relative mx-auto w-full max-w-[400px]"
+          style={{ animationDelay: "160ms" }}
+        >
+          <Image
+            src="/brand/logo.png"
+            alt={`Logo ${RESTAURANT.nom} ${RESTAURANT.suffixe}`}
+            width={640}
+            height={640}
+            sizes="(max-width: 1024px) 80vw, 400px"
+            className="w-full rotate-3 drop-shadow-[0_28px_40px_rgba(23,21,19,0.22)]"
+          />
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
-        <Reveal>
-          <p className="sur-titre">Quelques repères</p>
-        </Reveal>
-        <ol className="mt-10 flex flex-col">
-          {REPERES.map((r, i) => (
-            <Reveal as="li" key={r.annee} delai={i * 110}>
-              <div className="grid items-baseline gap-3 border-t border-creme/10 py-8 sm:grid-cols-[7rem_1fr]">
-                <span className="chiffres text-beurre">{r.annee}</span>
-                <div>
-                  <h2 className="font-display text-2xl text-creme">{r.titre}</h2>
-                  <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-creme-doux">
-                    {r.texte}
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </ol>
+      <section className="bg-sable/50">
+        <div className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
+          <Reveal className="flex flex-col items-center text-center">
+            <p className="sur-titre">Ce qu&apos;on vous propose</p>
+            <Epi className="mt-4 h-6 w-56 text-encre/55" />
+          </Reveal>
 
-        <Reveal className="mt-12">
-          <Link
-            href="/carte"
-            className="inline-block rounded-ticket bg-beurre px-7 py-4 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair"
-          >
-            Voir la carte du jour
-          </Link>
+          <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {PILIERS.map((pilier, i) => (
+              <Reveal as="li" key={pilier.titre} delai={i * 90}>
+                <div className="h-full rounded-[18px] border-2 border-dashed border-encre/20 bg-carte p-7">
+                  <h2 className="font-display text-xl font-bold tracking-[0.02em] text-encre">
+                    {pilier.titre}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-encre-douce">{pilier.texte}</p>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1240px] px-5 py-20 text-center sm:px-8">
+        <Reveal className="flex flex-col items-center">
+          <h2 className="text-[clamp(2rem,4.5vw,3.2rem)] leading-[0.95]">
+            Passez nous voir
+            <span className="block font-script text-framboise">ou réservez votre midi</span>
+          </h2>
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/carte"
+              className="rounded-full bg-orange px-7 py-4 font-display text-[1.05rem] font-semibold tracking-[0.08em] text-encre uppercase transition-colors hover:bg-orange-vif"
+            >
+              Voir la carte
+            </Link>
+            <Link
+              href="/contact"
+              className="rounded-full border-2 border-encre px-7 py-[14px] font-display text-[1.05rem] font-semibold tracking-[0.08em] text-encre uppercase transition-colors hover:bg-encre hover:text-papier"
+            >
+              Nous contacter
+            </Link>
+          </div>
         </Reveal>
       </section>
     </>

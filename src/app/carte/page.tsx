@@ -15,17 +15,16 @@ export default function Carte() {
   return (
     <>
       <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
-        <p className="sur-titre animate-rise">
-          Carte du {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date())}
-        </p>
+        {/* Pas de date ici : la page est prérendue, une date se figerait au build. */}
+        <p className="sur-titre animate-rise">Réservation du midi · retraits 11h30 – 13h30</p>
         <h1 className="animate-veil mt-6 max-w-[14ch] text-[clamp(2.6rem,8vw,6rem)] leading-[0.9]">
-          La carte
+          La <span className="font-script text-orange">carte</span>
         </h1>
         <p
-          className="animate-rise mt-7 max-w-[56ch] leading-relaxed text-creme-doux"
+          className="animate-rise mt-7 max-w-[56ch] leading-relaxed text-encre-douce"
           style={{ animationDelay: "220ms" }}
         >
-          Les <span className="text-creme">menus, plats et boissons</span> se
+          Les <span className="text-encre">menus, plats et boissons</span> se
           réservent en ligne pour le service du midi, et se règlent au choix
           maintenant ou au retrait. Le reste — viennoiseries, snacking,
           pâtisseries — s&apos;achète directement au comptoir, sans commander à
@@ -36,14 +35,14 @@ export default function Carte() {
       {/* Sommaire collant */}
       <nav
         aria-label="Catégories de la carte"
-        className="sticky top-[72px] z-30 border-y border-creme/10 bg-noir/85 backdrop-blur-xl"
+        className="sticky top-[72px] z-30 border-y border-encre/10 bg-papier/85 backdrop-blur-xl"
       >
         <ul className="mx-auto flex max-w-[1240px] gap-1 overflow-x-auto px-5 py-3 sm:px-8 [scrollbar-width:none]">
           {CATEGORIES.map((categorie) => (
             <li key={categorie.id}>
               <a
                 href={`#${categorie.id}`}
-                className="chiffres block rounded-ticket px-4 py-2 text-[0.7rem] tracking-[0.16em] whitespace-nowrap text-creme-doux uppercase transition-colors hover:bg-creme/5 hover:text-beurre"
+                className="chiffres block rounded-ticket px-4 py-2 text-[0.7rem] tracking-[0.16em] whitespace-nowrap text-encre-douce uppercase transition-colors hover:bg-encre/5 hover:text-orange-fonce"
               >
                 {categorie.nom}
               </a>
@@ -64,14 +63,14 @@ export default function Carte() {
               className="scroll-mt-[140px] pt-20"
               aria-labelledby={`titre-${categorie.id}`}
             >
-              <Reveal className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3 border-b border-creme/10 pb-6">
+              <Reveal className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3 border-b border-encre/10 pb-6">
                 <h2
                   id={`titre-${categorie.id}`}
                   className="text-[clamp(1.8rem,4vw,2.8rem)] leading-none"
                 >
                   {categorie.nom}
                 </h2>
-                <p className="max-w-[42ch] text-sm text-creme-doux">{categorie.intro}</p>
+                <p className="max-w-[42ch] text-sm text-encre-douce">{categorie.intro}</p>
               </Reveal>
 
               <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,7 +84,7 @@ export default function Carte() {
           );
         })}
 
-        <p className="chiffres mt-20 max-w-[60ch] text-[0.7rem] leading-relaxed text-creme-tres-doux">
+        <p className="chiffres mt-20 max-w-[60ch] text-[0.7rem] leading-relaxed text-encre-pale">
           Prix TTC, service compris. La liste des allergènes est indiquée sous
           chaque produit ; en cas d&apos;allergie sévère, signalez-le en note de
           commande ou appelez-nous au {RESTAURANT.telephone}.

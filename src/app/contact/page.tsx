@@ -18,7 +18,7 @@ export default function Contact() {
         <Reveal className="flex flex-col gap-10">
           <div>
             <h2 className="sur-titre mb-4">L&apos;adresse</h2>
-            <address className="flex flex-col gap-2 text-lg text-creme not-italic">
+            <address className="flex flex-col gap-2 text-lg text-encre not-italic">
               <span>{RESTAURANT.adresse}</span>
               <span>
                 {RESTAURANT.codePostal} {RESTAURANT.ville}
@@ -27,13 +27,13 @@ export default function Contact() {
             <div className="mt-4 flex flex-col gap-1">
               <a
                 href={`tel:${RESTAURANT.telephoneLien}`}
-                className="chiffres text-sm text-beurre transition-colors hover:text-beurre-clair"
+                className="chiffres text-lg text-orange-fonce transition-colors hover:text-encre"
               >
                 {RESTAURANT.telephone}
               </a>
               <a
                 href={`mailto:${RESTAURANT.email}`}
-                className="text-sm text-creme-doux transition-colors hover:text-beurre"
+                className="text-sm text-encre-douce transition-colors hover:text-orange-fonce"
               >
                 {RESTAURANT.email}
               </a>
@@ -46,12 +46,12 @@ export default function Contact() {
               {HORAIRES.map((h) => (
                 <li
                   key={h.jour}
-                  className="flex items-baseline justify-between gap-4 border-b border-creme/8 pb-2 text-sm"
+                  className="flex items-baseline justify-between gap-4 border-b border-encre/8 pb-2 text-sm"
                 >
-                  <span className="text-creme-doux">{h.jour}</span>
+                  <span className="text-encre-douce">{h.jour}</span>
                   <span
                     className={`chiffres text-right text-[0.78rem] ${
-                      "ferme" in h && h.ferme ? "text-brique" : "text-creme"
+                      "ferme" in h && h.ferme ? "text-brique" : "text-encre"
                     }`}
                   >
                     {h.service}
@@ -61,10 +61,10 @@ export default function Contact() {
             </ul>
           </div>
 
-          <div className="perfore rounded-ticket border border-creme/12 bg-encre/50 p-6">
-            <p className="text-sm leading-relaxed text-creme-doux">
+          <div className="perfore rounded-ticket border border-encre/12 bg-carte/50 p-6">
+            <p className="text-sm leading-relaxed text-encre-douce">
               Pour réserver un repas, passez plutôt par{" "}
-              <span className="text-creme">la carte</span> : c&apos;est immédiat
+              <span className="text-encre">la carte</span> : c&apos;est immédiat
               et vous choisissez votre créneau. Le téléphone reste le plus
               rapide pour une question sur une commande en cours — nous
               décrochons entre les coups de feu.
@@ -73,8 +73,8 @@ export default function Contact() {
         </Reveal>
 
         <Reveal delai={120}>
-          <div className="rounded-ticket border border-creme/12 bg-encre/50 p-7 sm:p-9">
-            <h2 className="mb-8 font-display text-2xl text-creme">Un message ?</h2>
+          <div className="rounded-ticket border border-encre/12 bg-carte/50 p-7 sm:p-9">
+            <h2 className="mb-8 font-display text-2xl text-encre">Un message ?</h2>
             <FormulaireContact />
           </div>
         </Reveal>

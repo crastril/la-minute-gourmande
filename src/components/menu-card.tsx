@@ -5,7 +5,7 @@ import { prix } from "@/lib/format";
 
 export function MenuCard({ produit }: { produit: Produit }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-ticket border border-creme/10 bg-encre/60 transition-colors duration-500 hover:border-beurre/35">
+    <article className="group flex h-full flex-col overflow-hidden rounded-ticket border border-encre/10 bg-carte/60 transition-colors duration-500 hover:border-orange/35">
       <div className="relative aspect-[5/3] overflow-hidden">
         <DishVisual
           produit={produit}
@@ -13,7 +13,7 @@ export function MenuCard({ produit }: { produit: Produit }) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         {produit.populaire && (
-          <span className="chiffres absolute top-3 left-3 z-10 rounded-ticket bg-noir/75 px-2 py-1 text-[0.6rem] tracking-[0.18em] text-beurre uppercase backdrop-blur-sm">
+          <span className="chiffres absolute top-3 left-3 z-10 rounded-ticket bg-papier/75 px-2 py-1 text-[0.6rem] tracking-[0.18em] text-orange-fonce uppercase backdrop-blur-sm">
             Le préféré
           </span>
         )}
@@ -21,16 +21,16 @@ export function MenuCard({ produit }: { produit: Produit }) {
 
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-baseline justify-between gap-4">
-          <h3 className="font-display text-xl text-creme">{produit.nom}</h3>
-          <span className="chiffres shrink-0 text-sm text-beurre">{prix(produit.prix)}</span>
+          <h3 className="font-display text-xl text-encre">{produit.nom}</h3>
+          <span className="chiffres shrink-0 text-sm text-orange-fonce">{prix(produit.prix)}</span>
         </div>
 
-        <p className="text-sm leading-relaxed text-creme-doux">{produit.description}</p>
+        <p className="text-sm leading-relaxed text-encre-douce">{produit.description}</p>
 
         {(produit.tags?.length || produit.allergenes?.length) && (
-          <p className="chiffres flex flex-wrap gap-x-2 gap-y-1 text-[0.6rem] tracking-[0.12em] text-creme-tres-doux uppercase">
+          <p className="chiffres flex flex-wrap gap-x-2 gap-y-1 text-[0.6rem] tracking-[0.12em] text-encre-pale uppercase">
             {produit.tags?.map((tag) => (
-              <span key={tag} className="text-pistache">
+              <span key={tag} className="text-framboise-fonce">
                 {tag}
               </span>
             ))}
@@ -44,7 +44,7 @@ export function MenuCard({ produit }: { produit: Produit }) {
           {estCommandable(produit) ? (
             <AddToCart produit={produit} />
           ) : (
-            <span className="chiffres inline-block rounded-ticket border border-creme/10 px-3 py-2 text-[0.65rem] tracking-[0.14em] text-creme-tres-doux uppercase">
+            <span className="chiffres inline-block rounded-ticket border border-encre/10 px-3 py-2 text-[0.65rem] tracking-[0.14em] text-encre-pale uppercase">
               {produit.epuise ? "Épuisé" : "Au comptoir"}
             </span>
           )}

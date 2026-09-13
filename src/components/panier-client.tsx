@@ -18,16 +18,16 @@ function Stepper({
   libelle: string;
 }) {
   return (
-    <div className="flex items-center gap-1 rounded-ticket border border-creme/15">
+    <div className="flex items-center gap-1 rounded-ticket border border-encre/15">
       <button
         type="button"
         onClick={() => onChange(valeur - 1)}
         aria-label={`Retirer un ${libelle}`}
-        className="grid size-8 place-items-center text-creme-doux transition-colors hover:text-beurre"
+        className="grid size-8 place-items-center text-encre-douce transition-colors hover:text-orange-fonce"
       >
         −
       </button>
-      <span className="chiffres w-6 text-center text-sm text-creme" aria-live="polite">
+      <span className="chiffres w-6 text-center text-sm text-encre" aria-live="polite">
         {valeur}
       </span>
       <button
@@ -35,7 +35,7 @@ function Stepper({
         onClick={() => onChange(valeur + 1)}
         disabled={valeur >= 20}
         aria-label={`Ajouter un ${libelle}`}
-        className="grid size-8 place-items-center text-creme-doux transition-colors hover:text-beurre disabled:opacity-30"
+        className="grid size-8 place-items-center text-encre-douce transition-colors hover:text-orange-fonce disabled:opacity-30"
       >
         +
       </button>
@@ -44,7 +44,7 @@ function Stepper({
 }
 
 const champ =
-  "w-full rounded-ticket border border-creme/15 bg-noir px-4 py-3 text-sm text-creme placeholder:text-creme-tres-doux transition-colors focus:border-beurre/60 focus:outline-none";
+  "w-full rounded-ticket border border-encre/15 bg-papier px-4 py-3 text-sm text-encre placeholder:text-encre-pale transition-colors focus:border-orange/60 focus:outline-none";
 
 export function PanierClient({
   paiementEnLigneDisponible,
@@ -107,21 +107,21 @@ export function PanierClient({
 
   if (!hydrate) {
     return (
-      <p className="chiffres py-20 text-sm text-creme-tres-doux">Chargement du panier…</p>
+      <p className="chiffres py-20 text-sm text-encre-pale">Chargement du panier…</p>
     );
   }
 
   if (nombreArticles === 0) {
     return (
-      <div className="perfore rounded-ticket border border-creme/12 bg-encre/50 px-8 py-20 text-center">
-        <p className="font-display text-3xl text-creme">Votre panier est vide.</p>
-        <p className="mx-auto mt-4 max-w-[38ch] text-sm text-creme-doux">
+      <div className="perfore rounded-ticket border border-encre/12 bg-carte/50 px-8 py-20 text-center">
+        <p className="font-display text-3xl text-encre">Votre panier est vide.</p>
+        <p className="mx-auto mt-4 max-w-[38ch] text-sm text-encre-douce">
           La réservation en ligne concerne les menus et les plats du midi. La
           viennoiserie et le snacking s&apos;achètent directement au comptoir.
         </p>
         <Link
           href="/carte"
-          className="mt-8 inline-block rounded-ticket bg-beurre px-7 py-3.5 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair"
+          className="mt-8 inline-block rounded-ticket bg-orange px-7 py-3.5 text-sm font-medium text-encre transition-colors hover:bg-orange-vif"
         >
           Découvrir la carte
         </Link>
@@ -132,22 +132,22 @@ export function PanierClient({
   return (
     <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-start">
       {/* Le ticket */}
-      <section aria-label="Articles commandés" className="perfore rounded-ticket border border-creme/12 bg-encre/50">
-        <header className="flex items-baseline justify-between border-b border-dashed border-creme/20 px-6 py-5">
-          <span className="chiffres text-[0.65rem] tracking-[0.2em] text-creme-tres-doux uppercase">
+      <section aria-label="Articles commandés" className="perfore rounded-ticket border border-encre/12 bg-carte/50">
+        <header className="flex items-baseline justify-between border-b border-dashed border-encre/20 px-6 py-5">
+          <span className="chiffres text-[0.65rem] tracking-[0.2em] text-encre-pale uppercase">
             Bon de commande
           </span>
-          <span className="chiffres text-[0.65rem] text-creme-tres-doux">
+          <span className="chiffres text-[0.65rem] text-encre-pale">
             {nombreArticles} art.
           </span>
         </header>
 
-        <ul className="divide-y divide-dashed divide-creme/12">
+        <ul className="divide-y divide-dashed divide-encre/12">
           {detail.map((ligne) => (
             <li key={ligne.id} className="flex flex-wrap items-center gap-4 px-6 py-5">
               <div className="min-w-[9rem] flex-1">
-                <p className="font-display text-lg text-creme">{ligne.produit.nom}</p>
-                <p className="chiffres mt-1 text-[0.7rem] text-creme-tres-doux">
+                <p className="font-display text-lg text-encre">{ligne.produit.nom}</p>
+                <p className="chiffres mt-1 text-[0.7rem] text-encre-pale">
                   {prix(ligne.produit.prix)} l&apos;unité
                 </p>
               </div>
@@ -158,7 +158,7 @@ export function PanierClient({
                 onChange={(n) => definirQuantite(ligne.id, n)}
               />
 
-              <span className="chiffres w-[4.5rem] text-right text-sm text-beurre">
+              <span className="chiffres w-[4.5rem] text-right text-sm text-orange-fonce">
                 {prix(ligne.sousTotal)}
               </span>
 
@@ -166,7 +166,7 @@ export function PanierClient({
                 type="button"
                 onClick={() => retirer(ligne.id)}
                 aria-label={`Retirer ${ligne.produit.nom} du panier`}
-                className="text-creme-tres-doux transition-colors hover:text-brique"
+                className="text-encre-pale transition-colors hover:text-brique"
               >
                 ✕
               </button>
@@ -174,22 +174,22 @@ export function PanierClient({
           ))}
         </ul>
 
-        <footer className="flex items-baseline justify-between border-t border-dashed border-creme/20 px-6 py-6">
-          <span className="font-display text-xl text-creme">Total</span>
-          <span className="chiffres text-2xl text-beurre">{prix(total)}</span>
+        <footer className="flex items-baseline justify-between border-t border-dashed border-encre/20 px-6 py-6">
+          <span className="font-display text-xl text-encre">Total</span>
+          <span className="chiffres text-2xl text-orange-fonce">{prix(total)}</span>
         </footer>
       </section>
 
       {/* Le retrait */}
-      <form onSubmit={onSubmit} className="rounded-ticket border border-creme/12 bg-encre/50 p-6 sm:p-8">
-        <h2 className="font-display text-2xl text-creme">Votre retrait</h2>
-        <p className="mt-2 text-sm text-creme-doux">
+      <form onSubmit={onSubmit} className="rounded-ticket border border-encre/12 bg-carte/50 p-6 sm:p-8">
+        <h2 className="font-display text-2xl text-encre">Votre retrait</h2>
+        <p className="mt-2 text-sm text-encre-douce">
           {RESTAURANT.adresse}, {RESTAURANT.codePostal} {RESTAURANT.ville} — comptez{" "}
           {RESTAURANT.delaiRetrait} minutes de préparation.
         </p>
 
         {annule && (
-          <p className="mt-5 rounded-ticket border border-beurre/30 bg-beurre/10 px-4 py-3 text-sm text-beurre-clair">
+          <p className="mt-5 rounded-ticket border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-orange-fonce">
             Paiement interrompu — votre panier est intact, vous pouvez réessayer.
           </p>
         )}
@@ -202,8 +202,8 @@ export function PanierClient({
                 key={c}
                 className={`chiffres cursor-pointer rounded-ticket border px-3.5 py-2 text-[0.8rem] transition-colors ${
                   creneau === c
-                    ? "border-beurre bg-beurre text-noir"
-                    : "border-creme/15 text-creme-doux hover:border-beurre/50 hover:text-creme"
+                    ? "border-orange bg-orange text-encre"
+                    : "border-encre/15 text-encre-douce hover:border-orange/50 hover:text-encre"
                 }`}
               >
                 <input
@@ -242,8 +242,8 @@ export function PanierClient({
                 key={option.valeur}
                 className={`cursor-pointer rounded-ticket border p-4 transition-colors ${
                   paiement === option.valeur
-                    ? "border-beurre bg-beurre/10"
-                    : "border-creme/15 hover:border-beurre/45"
+                    ? "border-orange bg-orange/10"
+                    : "border-encre/15 hover:border-orange/45"
                 } ${option.disponible ? "" : "pointer-events-none opacity-40"}`}
               >
                 <input
@@ -255,8 +255,8 @@ export function PanierClient({
                   disabled={!option.disponible}
                   className="sr-only"
                 />
-                <span className="block text-sm text-creme">{option.titre}</span>
-                <span className="mt-1 block text-[0.75rem] leading-relaxed text-creme-doux">
+                <span className="block text-sm text-encre">{option.titre}</span>
+                <span className="mt-1 block text-[0.75rem] leading-relaxed text-encre-douce">
                   {option.disponible ? option.detail : "Momentanément indisponible."}
                 </span>
               </label>
@@ -313,7 +313,7 @@ export function PanierClient({
         )}
 
         {!aUnPrincipal && (
-          <p className="mt-7 rounded-ticket border border-beurre/30 bg-beurre/10 px-4 py-3 text-sm text-beurre-clair">
+          <p className="mt-7 rounded-ticket border border-orange/30 bg-orange/10 px-4 py-3 text-sm text-orange-fonce">
             Ajoutez au moins un menu ou un plat : les boissons seules se prennent
             directement au comptoir.
           </p>
@@ -322,7 +322,7 @@ export function PanierClient({
         <button
           type="submit"
           disabled={envoi || !aUnPrincipal}
-          className="mt-7 w-full rounded-ticket bg-beurre px-6 py-4 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-7 w-full rounded-ticket bg-orange px-6 py-4 text-sm font-medium text-encre transition-colors hover:bg-orange-vif disabled:cursor-not-allowed disabled:opacity-60"
         >
           {envoi
             ? "Envoi en cours…"
@@ -331,7 +331,7 @@ export function PanierClient({
               : `Réserver · ${prix(total)} à régler au retrait`}
         </button>
 
-        <p className="chiffres mt-4 text-[0.65rem] leading-relaxed text-creme-tres-doux">
+        <p className="chiffres mt-4 text-[0.65rem] leading-relaxed text-encre-pale">
           En validant, vous acceptez d&apos;être contacté au numéro indiqué si la
           cuisine a besoin d&apos;une précision.
         </p>

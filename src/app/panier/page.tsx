@@ -23,12 +23,12 @@ export default function Panier() {
     <section className="mx-auto max-w-[1240px] px-5 pt-16 pb-24 sm:px-8 sm:pt-24">
       <p className="sur-titre">Étape finale</p>
       <h1 className="mt-5 text-[clamp(2.4rem,6vw,4.4rem)] leading-[0.95]">
-        Votre <span className="text-beurre italic">commande</span>
+        Votre <span className="font-script normal-case text-orange">commande</span>
       </h1>
 
       <div className="mt-12">
         <Suspense
-          fallback={<p className="chiffres text-sm text-creme-tres-doux">Chargement du panier…</p>}
+          fallback={<p className="chiffres text-sm text-encre-pale">Chargement du panier…</p>}
         >
           <PanierClient paiementEnLigneDisponible={paiementEnLigneDisponible} />
         </Suspense>

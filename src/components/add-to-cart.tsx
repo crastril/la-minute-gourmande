@@ -19,7 +19,7 @@ export function AddToCart({
 
   if (produit.epuise) {
     return (
-      <span className="chiffres rounded-ticket border border-creme/10 px-3 py-2 text-[0.7rem] text-creme-tres-doux uppercase">
+      <span className="chiffres rounded-ticket border border-encre/10 px-3 py-2 text-[0.7rem] text-encre-pale uppercase">
         Épuisé
       </span>
     );
@@ -42,8 +42,8 @@ export function AddToCart({
       aria-label={`Ajouter ${produit.nom} au panier`}
       className={
         variante === "plein"
-          ? `${base} w-full bg-beurre px-5 py-3 font-medium text-noir hover:bg-beurre-clair`
-          : `${base} border border-creme/15 px-4 py-2 text-creme hover:border-beurre/60 hover:bg-beurre/10 hover:text-beurre-clair`
+          ? `${base} w-full bg-orange px-5 py-3 font-medium text-encre hover:bg-orange-vif`
+          : `${base} border border-encre/15 px-4 py-2 text-encre hover:border-orange/60 hover:bg-orange/10 hover:text-orange-fonce`
       }
     >
       <span

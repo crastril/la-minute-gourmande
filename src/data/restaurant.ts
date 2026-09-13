@@ -1,25 +1,40 @@
 /**
  * Informations de l'établissement.
- * ⚠️ Valeurs de démonstration : à remplacer par les données réelles du client
- * (adresse, téléphone, horaires exacts, SIRET, réseaux sociaux).
+ *
+ * Coordonnées reprises de l'enseigne extérieure et de l'affiche d'ouverture
+ * fournies par le client (dossier `identité/`).
+ * ⚠️ Restent à confirmer : le domaine du site et les horaires d'ouverture.
  */
 export const RESTAURANT = {
-  nom: "La Minute Gourmande",
-  baseline: "Boulangerie et restauration, en face du lycée.",
-  ville: "Bordeaux",
-  adresse: "18 rue des Faussets",
-  codePostal: "33000",
-  telephone: "05 56 00 00 00",
-  telephoneLien: "+33556000000",
-  email: "bonjour@laminutegourmande.fr",
-  url: "https://laminutegourmande.fr",
-  instagram: "https://instagram.com/laminutegourmande",
-  facebook: "https://facebook.com/laminutegourmande",
-  fondation: 2019,
+  nom: "Minute Gourmande",
+  /** Mention du logo (French West Indies). */
+  suffixe: "FWI",
+  baseline: "Fait maison avec passion.",
+  activites: ["Sandwicherie", "Pâtisserie", "Restauration rapide"],
+  ville: "Le François",
+  region: "Martinique",
+  adresse: "16 rue Frantz Fanon",
+  codePostal: "97240",
+  telephone: "0696 10 19 47",
+  telephoneLien: "+596696101947",
+  email: "minutegourmande.fwi@gmail.com",
+  instagram: "https://instagram.com/minutegourmande.fwi",
+  instagramPseudo: "minutegourmande.fwi",
+  /** ⚠️ Domaine non encore réservé : à confirmer avant la mise en ligne. */
+  url: "https://minutegourmande.fr",
+  /** Grande ouverture annoncée sur l'affiche. */
+  ouverture: "2026-09-03",
   /** Temps de préparation annoncé pour une commande de restauration. */
   delaiRetrait: 15,
 } as const;
 
+/** Date d'ouverture lisible, calculée dans le fuseau de la Martinique. */
+export const DATE_OUVERTURE = new Intl.DateTimeFormat("fr-FR", {
+  dateStyle: "long",
+  timeZone: "America/Martinique",
+}).format(new Date(`${RESTAURANT.ouverture}T12:00:00-04:00`));
+
+/** ⚠️ Horaires non communiqués : valeurs provisoires à remplacer. */
 export const HORAIRES = [
   { jour: "Lundi", service: "06h30 — 19h00" },
   { jour: "Mardi", service: "06h30 — 19h00" },

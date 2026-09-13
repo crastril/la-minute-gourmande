@@ -1,29 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  /* — Palette : noir de truffe, crème, beurre noisette, pistache — */
-  --color-noir: #14110d;
-  --color-encre: #1c1813;
-  --color-ardoise: #26201a;
-  --color-fumee: #352d24;
-  --color-creme: #f5eee2;
-  --color-creme-doux: #c9bda9;
-  --color-creme-tres-doux: #8c8175;
-  --color-beurre: #e7a33c;
-  --color-beurre-clair: #f3c67f;
-  --color-pistache: #a9c05c;
-  --color-brique: #c4492e;
+  /*
+   * Palette relevée sur les supports existants du client :
+   * logo (badge sable), enseigne extérieure (orange / noir),
+   * affiche d'ouverture (crème / framboise).
+   */
+  --color-papier: #faf0e7; /* fond crème de l'affiche */
+  --color-carte: #fffaf4; /* surfaces de cartes */
+  --color-sable: #f4d8b3; /* fond du badge logo */
+  --color-sable-fonce: #e8c28f;
+  --color-encre: #171513; /* bandeaux noirs de l'enseigne et de l'affiche */
+  --color-encre-douce: #4b423a;
+  --color-encre-pale: #6f6254;
+  --color-orange: #de5321; /* orange de l'enseigne : actions, commande */
+  --color-orange-vif: #ef6a37;
+  --color-orange-fonce: #b8410f; /* même orange, assombri pour le texte courant (AA sur crème) */
+  --color-framboise: #d44a62; /* framboise de l'affiche : vitrine, pâtisserie */
+  --color-framboise-fonce: #a8324a;
+  --color-brique: #b3261e; /* erreurs */
 
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+  /* Typographies au plus près des supports :
+     Anton ≈ « OUVERTURE ! » / « SANDWICHERIE », Kaushan ≈ « Gourmande »,
+     Barlow Condensed ≈ « RESTAURATION RAPIDE ». */
+  --font-titre: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  --font-script: var(--font-kaushan), "Brush Script MT", cursive;
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-mono: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
 
-  --radius-ticket: 3px;
+  --radius-ticket: 10px;
 
   --animate-rise: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-veil: veil 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-veil: veil 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-tick: tick 1s steps(2, jump-none) infinite;
-  --animate-defile: defile 42s linear infinite;
+  --animate-defile: defile 38s linear infinite;
 
   @keyframes rise {
     from {
@@ -42,7 +53,7 @@
     }
     to {
       opacity: 1;
-      clip-path: inset(0 0 0 0);
+      clip-path: inset(0 0 -20% 0);
     }
   }
   @keyframes tick {
@@ -69,7 +80,7 @@
   *,
   *::before,
   *::after {
-    border-color: color-mix(in oklab, var(--color-creme) 12%, transparent);
+    border-color: color-mix(in oklab, var(--color-encre) 14%, transparent);
   }
 
   html {
@@ -78,30 +89,42 @@
   }
 
   body {
-    background-color: var(--color-noir);
-    color: var(--color-creme);
+    background-color: var(--color-papier);
+    color: var(--color-encre);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
   }
 
   ::selection {
-    background: var(--color-beurre);
-    color: var(--color-noir);
+    background: var(--color-orange);
+    color: var(--color-encre);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-beurre);
+    outline: 2px solid var(--color-orange-fonce);
     outline-offset: 3px;
   }
 
   h1,
-  h2,
+  h2 {
+    font-family: var(--font-titre);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+
   h3 {
     font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  /* Le mot en script garde sa casse, même dans un titre en capitales. */
+  .font-script {
+    text-transform: none;
+    letter-spacing: 0;
     font-weight: 400;
-    font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 120;
-    letter-spacing: -0.02em;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -116,6 +139,7 @@
   }
 }
 
+/* Grain papier, discret : l'affiche a une texture, pas un fond plat. */
 @utility grain {
   position: relative;
   isolation: isolate;
@@ -126,36 +150,29 @@
     inset: 0;
     z-index: 50;
     pointer-events: none;
-    opacity: 0.5;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.38'/%3E%3C/svg%3E");
+    opacity: 0.2;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
   }
 }
 
-/* Regard : un liseré crème très fin, utilisé partout comme signature graphique */
 @utility filet {
-  border-top: 1px solid color-mix(in oklab, var(--color-creme) 14%, transparent);
+  border-top: 1px solid color-mix(in oklab, var(--color-encre) 14%, transparent);
 }
 
-/* Bon de commande : bord perforé façon ticket de cuisine */
+/* Bon de commande : bord perforé */
 @utility perfore {
   --perf: 7px;
-  -webkit-mask-image: radial-gradient(
-      circle at var(--perf) 50%,
-      transparent var(--perf),
-      black calc(var(--perf) + 0.5px)
-    ),
+  -webkit-mask-image:
+    radial-gradient(circle at var(--perf) 50%, transparent var(--perf), black calc(var(--perf) + 0.5px)),
     radial-gradient(
       circle at calc(100% - var(--perf)) 50%,
       transparent var(--perf),
       black calc(var(--perf) + 0.5px)
     );
   -webkit-mask-composite: source-in;
-  mask-image: radial-gradient(
-      circle at var(--perf) 50%,
-      transparent var(--perf),
-      black calc(var(--perf) + 0.5px)
-    ),
+  mask-image:
+    radial-gradient(circle at var(--perf) 50%, transparent var(--perf), black calc(var(--perf) + 0.5px)),
     radial-gradient(
       circle at calc(100% - var(--perf)) 50%,
       transparent var(--perf),
@@ -164,21 +181,72 @@
   mask-composite: intersect;
 }
 
+/* Ruban coup de pinceau, comme « LE 3 SEPTEMBRE 2026 » et « RESTAURATION RAPIDE ».
+   Les couleurs se donnent par classes (bg-encre, bg-orange…). */
+@utility ruban {
+  clip-path: polygon(
+    1.5% 10%,
+    99% 0%,
+    97.6% 32%,
+    100% 56%,
+    98.2% 80%,
+    99.4% 100%,
+    0.8% 92%,
+    2.4% 66%,
+    0% 44%,
+    2% 22%
+  );
+}
+
+/* Bord supérieur déchiré, pour les bandeaux noirs de pied de page. */
+@utility bord-dechire {
+  clip-path: polygon(
+    0 18px,
+    5% 6px,
+    12% 15px,
+    21% 3px,
+    33% 12px,
+    46% 0,
+    58% 11px,
+    70% 2px,
+    82% 13px,
+    92% 3px,
+    100% 12px,
+    100% 100%,
+    0 100%
+  );
+}
+
 @utility chiffres {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.01em;
 }
 
+/* Sur-titre avec tiret, comme « — RESTAURATION RAPIDE — » sur l'enseigne.
+   Sur fond noir, redéfinir --sur-titre-couleur (l'orange foncé y serait illisible). */
 @utility sur-titre {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.22em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-beurre);
+  color: var(--sur-titre-couleur, var(--color-orange-fonce));
+
+  &::before {
+    content: "";
+    width: 1.6em;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+  }
 }
 
-/* Révélation au scroll (piloté par IntersectionObserver) */
+/* Révélation au scroll (pilotée par IntersectionObserver) */
 @utility apparition {
   opacity: 0;
   transform: translateY(22px);

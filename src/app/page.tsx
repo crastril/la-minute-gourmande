@@ -1,62 +1,121 @@
+import Image from "next/image";
 import Link from "next/link";
+import {
+  IconeAdresse,
+  IconeCroissant,
+  IconeCupcake,
+  IconeEmail,
+  IconeInstagram,
+  IconeSac,
+  IconeSandwich,
+  IconeSmartphone,
+  IconeTelephone,
+  IconeToque,
+} from "@/components/icones";
 import { MenuCard } from "@/components/menu-card";
+import { Epi, Rameau } from "@/components/ornement";
 import { Reveal } from "@/components/reveal";
 import { produitsDuJour } from "@/data/menu";
-import { RESTAURANT } from "@/data/restaurant";
+import { DATE_OUVERTURE, RESTAURANT } from "@/data/restaurant";
 
 /**
- * ⚠️ Textes de démonstration : structure validée, formulations à faire
- * relire par le client avant mise en ligne.
+ * ⚠️ Textes à faire relire par le client. Ils reprennent autant que possible
+ * les formulations de l'affiche et de l'enseigne.
  */
+
+const INFOS = [
+  { cle: "Retrait", valeur: "11h30 – 13h30" },
+  { cle: "Préparation", valeur: `${RESTAURANT.delaiRetrait} min` },
+  { cle: "Menus", valeur: "dès 8,90 €" },
+  { cle: "Règlement", valeur: "En ligne ou sur place" },
+];
+
+const DEFILEMENT = [
+  "Fait maison avec passion",
+  "Sandwicherie",
+  "Pâtisserie",
+  "Restauration rapide",
+  "Réservation du midi",
+  "Le François · Martinique",
+];
 
 const ETAPES = [
   {
     numero: "01",
+    Icone: IconeSmartphone,
     titre: "Vous réservez",
     texte:
-      "Menus et plats du midi se commandent en ligne, jusqu'au matin même. Vous choisissez l'heure à laquelle vous passez.",
+      "Menus et plats du midi se commandent en ligne. Vous choisissez l'heure à laquelle vous passez.",
   },
   {
     numero: "02",
+    Icone: IconeToque,
     titre: "On prépare",
-    texte:
-      "Tout est fait sur place : le pain le matin, les plats à l'heure de votre créneau. Rien n'attend sous une lampe.",
+    texte: "Votre commande est préparée pour votre créneau, au moment où la cuisine tourne.",
   },
   {
     numero: "03",
+    Icone: IconeSac,
     titre: "Vous récupérez",
-    texte:
-      "Votre nom est sur le comptoir à l'heure dite. Vous passez devant la file, vous repartez.",
+    texte: "Elle vous attend au comptoir, à votre nom. Vous passez devant la file, vous repartez.",
   },
 ];
 
-const TEMOIGNAGES = [
+const VITRINE = [
   {
-    citation:
-      "Quarante minutes de pause et cent cinquante élèves devant moi : sans la réservation, je ne déjeunais jamais.",
-    auteur: "Nathalie",
-    role: "Professeure au lycée",
+    Icone: IconeCroissant,
+    titre: "Viennoiseries",
+    texte: "Croissants, pains au chocolat et chaussons faits maison, à prendre au comptoir.",
   },
   {
-    citation: "Les parts de pizza à la sortie des cours, c'est une institution ici.",
-    auteur: "Yanis",
-    role: "Terminale",
+    Icone: IconeSandwich,
+    titre: "Snacking gourmand",
+    texte: "Sandwichs, paninis, salades, parts de pizza et hot-dogs.",
   },
   {
-    citation: "On commande à huit pour la salle des profs, tout est prêt et étiqueté à 12h15.",
-    auteur: "Marc",
-    role: "Habitué du vendredi",
+    Icone: IconeCupcake,
+    titre: "Pâtisseries maison",
+    texte: "Gâteaux, éclairs, flans et cookies, en vitrine chaque jour.",
   },
 ];
 
-const DEFILEMENT = [
-  "Cuit sur place",
-  "Viennoiseries pur beurre",
-  "Menus du midi",
-  "Sans file d'attente",
-  "En face du lycée",
-  "Réservation en ligne",
+const CONTACTS = [
+  {
+    Icone: IconeAdresse,
+    libelle: "Adresse",
+    valeur: `${RESTAURANT.adresse}, ${RESTAURANT.codePostal} ${RESTAURANT.ville}`,
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      `${RESTAURANT.adresse} ${RESTAURANT.codePostal} ${RESTAURANT.ville} ${RESTAURANT.region}`,
+    )}`,
+    externe: true,
+  },
+  {
+    Icone: IconeTelephone,
+    libelle: "Téléphone",
+    valeur: RESTAURANT.telephone,
+    href: `tel:${RESTAURANT.telephoneLien}`,
+    externe: false,
+  },
+  {
+    Icone: IconeEmail,
+    libelle: "E-mail",
+    valeur: RESTAURANT.email,
+    href: `mailto:${RESTAURANT.email}`,
+    externe: false,
+  },
+  {
+    Icone: IconeInstagram,
+    libelle: "Instagram",
+    valeur: `@${RESTAURANT.instagramPseudo}`,
+    href: RESTAURANT.instagram,
+    externe: true,
+  },
 ];
+
+const boutonPlein =
+  "inline-block rounded-full bg-orange px-7 py-4 font-display text-[1.05rem] font-semibold tracking-[0.08em] text-encre uppercase transition-colors hover:bg-orange-vif";
+const boutonContour =
+  "inline-block rounded-full border-2 border-encre px-7 py-[14px] font-display text-[1.05rem] font-semibold tracking-[0.08em] text-encre uppercase transition-colors hover:bg-encre hover:text-papier";
 
 export default function Accueil() {
   const duJour = produitsDuJour();
@@ -65,90 +124,109 @@ export default function Accueil() {
     <>
       {/* ——— Hero ——— */}
       <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background: `
-              radial-gradient(70% 55% at 72% 12%, rgba(231,163,60,0.16) 0%, transparent 62%),
-              radial-gradient(50% 40% at 8% 78%, rgba(169,192,92,0.09) 0%, transparent 60%)
-            `,
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.55]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgba(245,238,226,0.05) 1px, transparent 1px)",
-            backgroundSize: "clamp(80px, 12vw, 160px) 100%",
-          }}
-        />
+        <div className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 pt-12 pb-14 sm:px-8 sm:pt-16 lg:grid-cols-[1.15fr_0.85fr] lg:pt-20 lg:pb-20">
+          <div>
+            <p className="sur-titre animate-rise">{RESTAURANT.activites.join(" · ")}</p>
 
-        <div className="mx-auto max-w-[1240px] px-5 pt-16 pb-24 sm:px-8 sm:pt-24 lg:pt-28">
-          <p className="sur-titre animate-rise">
-            {RESTAURANT.ville} · Boulangerie & restauration
-          </p>
+            <h1 className="mt-6 text-[clamp(3rem,8.6vw,6.6rem)] leading-[0.92]">
+              <span className="animate-veil block">Commandez</span>
+              <span className="animate-veil block" style={{ animationDelay: "120ms" }}>
+                le matin,
+              </span>
+              <span
+                className="animate-veil mt-1 block font-script text-[0.7em] leading-[1.2] text-orange"
+                style={{ animationDelay: "260ms" }}
+              >
+                mangez à midi !
+              </span>
+            </h1>
 
-          <h1 className="mt-7 max-w-[16ch] text-[clamp(2.9rem,9.5vw,7.5rem)] leading-[0.88]">
-            <span className="animate-veil block">Commandez le matin,</span>
-            <span
-              className="animate-veil block pl-[0.08em] text-beurre italic"
-              style={{ animationDelay: "160ms" }}
-            >
-              mangez à midi.
-            </span>
-          </h1>
-
-          <div className="mt-12 grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-end">
             <p
-              className="animate-rise max-w-[48ch] text-lg leading-relaxed text-creme-doux"
-              style={{ animationDelay: "320ms" }}
+              className="animate-rise mt-7 max-w-[46ch] text-lg leading-relaxed text-encre-douce"
+              style={{ animationDelay: "360ms" }}
             >
-              La boulangerie en face du lycée. Viennoiseries, parts de pizza et
-              sandwichs au comptoir toute la journée — et, pour le midi,{" "}
-              <span className="text-creme">
-                des menus et des plats à réserver en ligne
-              </span>{" "}
-              que vous récupérez à l&apos;heure que vous avez choisie.
+              Sandwicherie, pâtisserie et restauration rapide au François, en
+              face du lycée. La vitrine est ouverte toute la journée — et pour le
+              midi,{" "}
+              <strong className="font-semibold text-encre">
+                menus et plats se réservent en ligne
+              </strong>
+              , prêts à l&apos;heure que vous choisissez.
             </p>
 
             <div
-              className="animate-rise flex flex-wrap items-center gap-3"
-              style={{ animationDelay: "440ms" }}
+              className="animate-rise mt-9 flex flex-wrap gap-3"
+              style={{ animationDelay: "460ms" }}
             >
-              <Link
-                href="/carte"
-                className="group relative overflow-hidden rounded-ticket bg-beurre px-7 py-4 text-sm font-medium text-noir transition-colors duration-300 hover:bg-beurre-clair"
-              >
-                Réserver mon déjeuner
-                <span className="chiffres ml-3 text-[0.7rem] opacity-70">→</span>
+              <Link href="/carte" className={boutonPlein}>
+                Réserver mon déjeuner →
               </Link>
-              <Link
-                href="/carte#viennoiseries"
-                className="rounded-ticket border border-creme/20 px-7 py-4 text-sm text-creme transition-colors duration-300 hover:border-beurre/60 hover:text-beurre-clair"
-              >
+              <Link href="/carte#viennoiseries" className={boutonContour}>
                 Voir la vitrine
               </Link>
             </div>
           </div>
 
-          {/* Bandeau « ticket de passe » */}
           <div
-            className="animate-rise perfore filet mt-16 grid grid-cols-2 gap-px overflow-hidden rounded-ticket bg-creme/10 md:grid-cols-4"
+            className="animate-rise relative isolate mx-auto w-full max-w-[440px]"
+            style={{ animationDelay: "200ms" }}
+          >
+            {/* Coups de pinceau orange, repris de l'enseigne */}
+            <svg
+              aria-hidden
+              viewBox="0 0 400 400"
+              fill="none"
+              className="absolute inset-0 -z-10 size-full scale-125 text-orange"
+            >
+              <path
+                d="M30 262 C 120 130, 262 70, 372 96"
+                stroke="currentColor"
+                strokeWidth="50"
+                strokeLinecap="round"
+                opacity="0.92"
+              />
+              <path
+                d="M64 330 C 168 236, 282 208, 366 228"
+                stroke="currentColor"
+                strokeWidth="22"
+                strokeLinecap="round"
+                opacity="0.5"
+              />
+              <path
+                d="M318 34 l40 -16 M334 64 l50 -8 M340 98 l40 6"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+            </svg>
+            <Image
+              src="/brand/logo.png"
+              alt={`Logo ${RESTAURANT.nom} ${RESTAURANT.suffixe}`}
+              width={640}
+              height={640}
+              sizes="(max-width: 1024px) 80vw, 440px"
+              className="relative w-full -rotate-6 drop-shadow-[0_28px_40px_rgba(23,21,19,0.25)]"
+            />
+            <p className="ruban absolute -bottom-3 left-1/2 w-max -translate-x-1/2 rotate-2 bg-encre px-8 py-3 font-display text-[0.95rem] font-semibold tracking-[0.16em] text-papier uppercase">
+              Ouvert depuis le {DATE_OUVERTURE}
+            </p>
+          </div>
+        </div>
+
+        {/* Bandeau d'infos, noir comme le bas de l'enseigne */}
+        <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
+          <div
+            className="animate-rise grid grid-cols-2 gap-px overflow-hidden rounded-[18px] bg-papier/15 md:grid-cols-4"
             style={{ animationDelay: "560ms" }}
           >
-            {[
-              { cle: "Retrait", valeur: "11h30 — 13h30" },
-              { cle: "Préparation", valeur: `${RESTAURANT.delaiRetrait} min` },
-              { cle: "Menus", valeur: "dès 8,90 €" },
-              { cle: "Règlement", valeur: "en ligne ou sur place" },
-            ].map((item) => (
-              <div key={item.cle} className="bg-noir px-5 py-6">
-                <p className="chiffres text-[0.6rem] tracking-[0.2em] text-creme-tres-doux uppercase">
+            {INFOS.map((item) => (
+              <div key={item.cle} className="bg-encre px-6 py-5 text-papier">
+                <p className="font-display text-[0.75rem] font-semibold tracking-[0.2em] text-orange uppercase">
                   {item.cle}
                 </p>
-                <p className="mt-2 font-display text-xl text-creme">{item.valeur}</p>
+                <p className="mt-1 font-display text-[1.35rem] leading-tight font-bold uppercase">
+                  {item.valeur}
+                </p>
               </div>
             ))}
           </div>
@@ -156,38 +234,44 @@ export default function Accueil() {
       </section>
 
       {/* ——— Bandeau défilant ——— */}
-      <section aria-hidden className="filet overflow-hidden border-b border-creme/10 py-5">
-        <div className="animate-defile flex w-max gap-10 whitespace-nowrap">
+      <section aria-hidden className="mt-16 overflow-hidden bg-orange py-3.5 text-encre">
+        <div className="animate-defile flex w-max gap-8 whitespace-nowrap">
           {[...DEFILEMENT, ...DEFILEMENT, ...DEFILEMENT, ...DEFILEMENT].map((mot, i) => (
             <span
               key={`${mot}-${i}`}
-              className="chiffres flex items-center gap-10 text-[0.7rem] tracking-[0.28em] text-creme-tres-doux uppercase"
+              className="flex items-center gap-8 font-display text-[1rem] font-semibold tracking-[0.2em] uppercase"
             >
               {mot}
-              <span className="text-beurre">✳</span>
+              <span className="text-xl leading-none">•</span>
             </span>
           ))}
         </div>
       </section>
 
-      {/* ——— Le service en trois gestes ——— */}
+      {/* ——— La réservation en trois étapes ——— */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
-        <Reveal>
+        <Reveal className="flex flex-col items-start gap-4">
           <p className="sur-titre">La réservation du midi</p>
-          <h2 className="mt-4 max-w-[18ch] text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-            Trois gestes, <span className="text-beurre italic">zéro file</span>.
+          <h2 className="max-w-[16ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">
+            Trois étapes, <span className="font-script text-orange">zéro file !</span>
           </h2>
         </Reveal>
 
-        <ol className="mt-14 grid gap-px overflow-hidden rounded-ticket bg-creme/10 md:grid-cols-3">
-          {ETAPES.map((etape, i) => (
-            <Reveal as="li" key={etape.numero} delai={i * 110}>
-              <div className="group h-full bg-noir p-8 transition-colors duration-500 hover:bg-encre">
-                <span className="chiffres text-[3.4rem] leading-none text-creme/10 transition-colors duration-500 group-hover:text-beurre/40">
-                  {etape.numero}
+        <ol className="mt-14 grid gap-5 md:grid-cols-3">
+          {ETAPES.map(({ numero, Icone, titre, texte }, i) => (
+            <Reveal as="li" key={numero} delai={i * 110}>
+              <div className="relative h-full rounded-[18px] border-2 border-dashed border-encre/20 bg-carte p-8">
+                <span
+                  aria-hidden
+                  className="absolute top-6 right-7 font-titre text-4xl text-encre/10"
+                >
+                  {numero}
                 </span>
-                <h3 className="mt-6 font-display text-2xl text-creme">{etape.titre}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-creme-doux">{etape.texte}</p>
+                <span className="grid size-16 place-items-center rounded-full border-2 border-orange text-orange-fonce">
+                  <Icone className="size-8" />
+                </span>
+                <h3 className="mt-6 text-2xl text-encre">{titre}</h3>
+                <p className="mt-2 leading-relaxed text-encre-douce">{texte}</p>
               </div>
             </Reveal>
           ))}
@@ -197,15 +281,15 @@ export default function Accueil() {
       {/* ——— À réserver aujourd'hui ——— */}
       <section className="mx-auto max-w-[1240px] px-5 pb-24 sm:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
-          <div>
+          <div className="flex flex-col items-start gap-4">
             <p className="sur-titre">Pour le midi</p>
-            <h2 className="mt-4 text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-              À réserver aujourd&apos;hui
+            <h2 className="text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">
+              À réserver <span className="font-script text-orange">aujourd&apos;hui</span>
             </h2>
           </div>
           <Link
             href="/carte"
-            className="chiffres group flex items-center gap-2 text-[0.7rem] tracking-[0.18em] text-creme-doux uppercase transition-colors hover:text-beurre"
+            className="group flex items-center gap-2 font-display font-semibold tracking-[0.14em] text-encre uppercase transition-colors hover:text-orange-fonce"
           >
             Voir toute la carte
             <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
@@ -221,117 +305,136 @@ export default function Accueil() {
         </div>
       </section>
 
-      {/* ——— La vitrine, au comptoir ——— */}
-      <section className="filet relative overflow-hidden bg-encre/50">
-        <div className="mx-auto grid max-w-[1240px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-          <Reveal>
+      {/* ——— La vitrine (framboise, comme l'affiche d'ouverture) ——— */}
+      <section className="relative overflow-hidden bg-sable/50">
+        <Rameau className="pointer-events-none absolute -top-4 left-[4%] h-40 w-28 -rotate-12 text-framboise/25" />
+        <Rameau className="pointer-events-none absolute right-[5%] bottom-6 h-36 w-24 rotate-[160deg] text-framboise/20" />
+
+        <div className="relative mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+          <Reveal className="flex flex-col items-center text-center [--sur-titre-couleur:var(--color-framboise-fonce)]">
             <p className="sur-titre">Sans réservation</p>
-            <h2 className="mt-4 text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.02]">
-              La vitrine,
-              <span className="block text-pistache italic">toute la journée.</span>
+            <h2 className="mt-4 text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">
+              La vitrine
+              <span className="block font-script text-framboise">toute la journée</span>
             </h2>
-            <p className="mt-6 max-w-[48ch] leading-relaxed text-creme-doux">
-              Viennoiseries pur beurre, parts de pizza, sandwichs, pâtisseries :
-              tout ça se prend directement au comptoir, sans commander à
-              l&apos;avance. Plusieurs fournées par jour, y compris pour la
-              sortie des cours.
+            <Epi className="mt-5 h-6 w-60 text-encre/55" />
+            <p className="mt-5 max-w-[52ch] leading-relaxed text-encre-douce">
+              Pas besoin de commander à l&apos;avance : tout ce qui suit se prend
+              directement au comptoir.
             </p>
-            <dl className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-3">
-              {[
-                { t: "06h30", d: "première fournée" },
-                { t: "Dès 1,20 €", d: "la viennoiserie" },
-                { t: "Sur place", d: "pain, snacking, pâtisserie" },
-              ].map((stat) => (
-                <div key={stat.t}>
-                  <dt className="font-display text-2xl text-creme">{stat.t}</dt>
-                  <dd className="chiffres mt-1 text-[0.65rem] tracking-[0.16em] text-creme-tres-doux uppercase">
-                    {stat.d}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+          </Reveal>
+
+          <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-0 md:divide-x-2 md:divide-dashed md:divide-framboise/30">
+            {VITRINE.map(({ Icone, titre, texte }, i) => (
+              <Reveal key={titre} delai={i * 110} className="flex flex-col items-center px-8 text-center">
+                <span className="grid size-20 place-items-center rounded-full border-2 border-framboise bg-carte text-framboise-fonce">
+                  <Icone className="size-10" />
+                </span>
+                <h3 className="mt-5 text-xl text-encre">{titre}</h3>
+                <p className="mt-2 max-w-[30ch] text-sm leading-relaxed text-encre-douce">{texte}</p>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal className="mt-14 flex justify-center">
             <Link
               href="/carte#viennoiseries"
-              className="mt-10 inline-block rounded-ticket border border-pistache/45 px-7 py-4 text-sm text-pistache transition-colors duration-300 hover:bg-pistache hover:text-noir"
+              className="rounded-full border-2 border-framboise-fonce px-7 py-[14px] font-display text-[1.05rem] font-semibold tracking-[0.08em] text-framboise-fonce uppercase transition-colors hover:bg-framboise-fonce hover:text-papier"
             >
               Découvrir la vitrine
             </Link>
           </Reveal>
+        </div>
+      </section>
 
-          <Reveal delai={140} className="relative">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-ticket border border-creme/10">
-              <div
-                aria-hidden
-                className="absolute inset-0"
-                style={{
-                  background: `
-                    radial-gradient(80% 60% at 30% 22%, rgba(169,192,92,0.28) 0%, transparent 65%),
-                    radial-gradient(70% 60% at 78% 80%, rgba(231,163,60,0.22) 0%, transparent 62%),
-                    linear-gradient(160deg, #241e17, #14110d)
-                  `,
-                }}
-              />
-              <svg
-                aria-hidden
-                viewBox="0 0 100 125"
-                className="absolute inset-0 size-full"
-                preserveAspectRatio="xMidYMid slice"
-              >
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <circle
-                    key={i}
-                    cx={22 + i * 14}
-                    cy={40 + (i % 2) * 34}
-                    r={11 - i * 0.9}
-                    fill="none"
-                    stroke="#f5eee2"
-                    strokeOpacity={0.16 - i * 0.015}
-                    strokeWidth="0.4"
-                  />
+      {/* ——— Nous trouver ——— */}
+      <section className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <Reveal>
+            <div className="rounded-[22px] bg-encre p-8 text-papier sm:p-10 [--sur-titre-couleur:var(--color-orange)]">
+              <p className="sur-titre">Nous trouver</p>
+              <ul className="mt-7 flex flex-col gap-5">
+                {CONTACTS.map(({ Icone, libelle, valeur, href, externe }) => (
+                  <li key={libelle}>
+                    <a
+                      href={href}
+                      {...(externe ? { target: "_blank", rel: "noreferrer noopener" } : {})}
+                      className="group flex items-center gap-4"
+                    >
+                      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-orange text-encre">
+                        <Icone className="size-6" />
+                      </span>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="font-display text-[0.75rem] font-semibold tracking-[0.18em] text-sable uppercase">
+                          {libelle}
+                        </span>
+                        <span className="text-lg text-papier transition-colors group-hover:text-orange">
+                          {/* Dans une adresse e-mail, la coupure tombe avant « @ », pas au milieu d'un mot. */}
+                          {valeur.indexOf("@") > 0 ? (
+                            <>
+                              {valeur.slice(0, valeur.indexOf("@"))}
+                              <wbr />
+                              {valeur.slice(valeur.indexOf("@"))}
+                            </>
+                          ) : (
+                            valeur
+                          )}
+                        </span>
+                      </span>
+                    </a>
+                  </li>
                 ))}
-              </svg>
-              <p className="chiffres absolute bottom-5 left-5 text-[0.6rem] tracking-[0.2em] text-creme-tres-doux uppercase">
-                ⚠ Visuel provisoire — photo client à venir
-              </p>
+              </ul>
             </div>
+          </Reveal>
+
+          <Reveal delai={140} className="flex flex-col items-center text-center lg:items-start lg:text-left">
+            <p className="sur-titre">Grande ouverture</p>
+            <h2 className="mt-4 text-[clamp(2.2rem,5vw,3.6rem)] leading-[0.95]">
+              Le {DATE_OUVERTURE}
+            </h2>
+            <p className="mt-3 font-script text-3xl text-framboise">Rejoignez l&apos;aventure !</p>
+            <p className="mt-5 max-w-[42ch] leading-relaxed text-encre-douce">
+              Suivez l&apos;actualité de la boutique sur Instagram.
+            </p>
+            <a
+              href={RESTAURANT.instagram}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="mt-7 inline-flex items-center gap-2 rounded-full border-2 border-encre px-6 py-3 font-display font-semibold tracking-[0.08em] uppercase transition-colors hover:bg-encre hover:text-papier"
+            >
+              <IconeInstagram className="size-5" />@{RESTAURANT.instagramPseudo}
+            </a>
           </Reveal>
         </div>
       </section>
 
-      {/* ——— Témoignages ——— */}
-      <section className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8">
-        <Reveal>
-          <p className="sur-titre">Ils reviennent</p>
-        </Reveal>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-ticket bg-creme/10 md:grid-cols-3">
-          {TEMOIGNAGES.map((t, i) => (
-            <Reveal as="article" key={t.auteur} delai={i * 110}>
-              <figure className="flex h-full flex-col justify-between gap-8 bg-noir p-8">
-                <blockquote className="font-display text-xl leading-snug text-creme">
-                  <span className="text-beurre">«</span> {t.citation}{" "}
-                  <span className="text-beurre">»</span>
-                </blockquote>
-                <figcaption className="chiffres text-[0.65rem] tracking-[0.16em] text-creme-tres-doux uppercase">
-                  {t.auteur} — {t.role}
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ——— CTA final ——— */}
+      {/* ——— Appel final ——— */}
       <section className="mx-auto max-w-[1240px] px-5 sm:px-8">
         <Reveal>
-          <div className="perfore relative overflow-hidden rounded-ticket border border-beurre/25 bg-gradient-to-br from-beurre/12 to-transparent px-8 py-16 text-center sm:px-16">
-            <p className="sur-titre">Retraits de 11h30 à 13h30</p>
-            <h2 className="mx-auto mt-5 max-w-[16ch] text-[clamp(2rem,5vw,3.6rem)] leading-[1.02]">
-              Votre déjeuner vous attend.
-            </h2>
-            <Link
-              href="/carte"
-              className="mt-9 inline-block rounded-ticket bg-beurre px-8 py-4 text-sm font-medium text-noir transition-colors duration-300 hover:bg-beurre-clair"
+          <div className="relative isolate overflow-hidden rounded-[24px] bg-encre px-8 py-16 text-center text-papier sm:px-16 [--sur-titre-couleur:var(--color-orange)]">
+            <svg
+              aria-hidden
+              viewBox="0 0 400 200"
+              preserveAspectRatio="none"
+              fill="none"
+              className="absolute inset-0 -z-10 size-full text-orange"
             >
+              <path
+                d="M-20 178 C 90 120, 180 152, 262 110 S 382 58, 430 28"
+                stroke="currentColor"
+                strokeWidth="34"
+                strokeLinecap="round"
+                opacity="0.2"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+            <p className="sur-titre">Retraits de 11h30 à 13h30</p>
+            <h2 className="mx-auto mt-5 max-w-[18ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95] text-papier">
+              Votre déjeuner
+              <span className="block font-script text-orange">vous attend !</span>
+            </h2>
+            <Link href="/carte" className={`mt-9 ${boutonPlein}`}>
               Composer ma commande
             </Link>
           </div>

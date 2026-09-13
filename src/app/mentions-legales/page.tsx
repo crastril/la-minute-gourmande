@@ -54,9 +54,9 @@ export default function MentionsLegales() {
 
       <div className="mt-12 flex flex-col gap-10">
         {SECTIONS.map((section) => (
-          <div key={section.titre} className="border-t border-creme/10 pt-7">
-            <h2 className="font-display text-xl text-creme">{section.titre}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-creme-doux">{section.contenu}</p>
+          <div key={section.titre} className="border-t border-encre/10 pt-7">
+            <h2 className="font-display text-xl text-encre">{section.titre}</h2>
+            <p className="mt-3 text-sm leading-relaxed text-encre-douce">{section.contenu}</p>
           </div>
         ))}
       </div>

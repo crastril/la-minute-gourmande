@@ -51,14 +51,16 @@ Le code est terminé ; il attend les éléments réels. Tout est regroupé pour 
 
 | À fournir | Où ça se branche |
 | --- | --- |
-| **Logo** (SVG) | `src/components/logo.tsx` — voir `public/brand/LISEZ-MOI.md` |
-| **Charte** (couleurs, polices) | bloc `@theme` de `src/app/globals.css` + `src/app/layout.tsx` |
-| **Produits & prix** (flyers) | `src/data/menu.ts` — le reste du site lit uniquement ce fichier |
+| **Produits & prix** | `src/data/menu.ts` — le reste du site lit uniquement ce fichier. Les supports fournis ne donnent aucun prix |
 | **Photos des plats** | `public/photos/`, puis champ `image` de chaque produit |
-| **Coordonnées, horaires, créneaux** | `src/data/restaurant.ts` |
+| **Horaires d'ouverture** | `src/data/restaurant.ts` |
+| **Domaine du site** | `src/data/restaurant.ts` (`url`) et `NEXT_PUBLIC_SITE_URL` |
 | **Mentions légales** (SIRET, RCS, TVA…) | `src/app/mentions-legales/page.tsx` |
+| **Logo vectoriel** (optionnel) | `public/brand/` — le logo actuel est une image extraite du PDF |
 
-Les textes actuels (accueil, traiteur, « la maison », témoignages) sont rédigés mais **fictifs** : à faire valider ou réécrire avec le client.
+**Déjà intégré** depuis le dossier `identité/` : logo, palette, typographies, adresse, téléphone, e-mail, Instagram et date d'ouverture. Le détail de l'identité visuelle est dans [`public/brand/LISEZ-MOI.md`](public/brand/LISEZ-MOI.md).
+
+Les textes de l'accueil et de « La boutique » reprennent les formulations de l'affiche et de l'enseigne, mais restent **à faire valider** par le client. Aucun témoignage ni historique n'est inventé.
 
 Tant qu'aucune photo n'est fournie, chaque produit affiche une assiette générée en dégradé, stable et différente par produit — rien ne casse.
 

@@ -1,11 +1,28 @@
 import Image from "next/image";
-import type { Produit } from "@/data/menu";
+import {
+  IconeBurger,
+  IconeCroissant,
+  IconeCupcake,
+  IconeGobelet,
+  IconeSandwich,
+} from "@/components/icones";
+import { CATEGORIES, type CategorieId, type Produit } from "@/data/menu";
+
+const ICONE_PAR_CATEGORIE: Record<CategorieId, typeof IconeBurger> = {
+  menus: IconeBurger,
+  plats: IconeBurger,
+  boissons: IconeGobelet,
+  snacking: IconeSandwich,
+  viennoiseries: IconeCroissant,
+  patisseries: IconeCupcake,
+};
 
 /**
  * Visuel d'un produit.
  * Si `produit.image` est renseigné (photo déposée dans /public), on l'affiche.
- * Sinon on génère une assiette abstraite déterministe : pas de photo cassée,
- * et la carte reste présentable tant que le client n'a pas fourni ses visuels.
+ * Sinon : une assiette dessinée avec le pictogramme de la catégorie, teintée
+ * orange pour ce qui se commande et framboise pour la vitrine — rien ne casse
+ * tant que le client n'a pas fourni ses photos.
  */
 export function DishVisual({
   produit,
@@ -28,10 +45,16 @@ export function DishVisual({
     );
   }
 
-  // Teinte stable dérivée du nom : deux produits n'ont jamais la même assiette.
+  const commandable =
+    CATEGORIES.find((c) => c.id === produit.categorie)?.commandable ?? false;
+  const Icone = ICONE_PAR_CATEGORIE[produit.categorie];
+
+  // Position stable dérivée de l'identifiant : deux produits voisins ne se
+  // ressemblent jamais tout à fait.
   const graine = [...produit.id].reduce((n, c) => n + c.charCodeAt(0), 0);
-  const teinte = 18 + (graine % 58);
-  const rotation = graine % 360;
+  const x = 22 + (graine % 30);
+  const y = 18 + ((graine >> 3) % 28);
+  const accent = commandable ? "222,83,33" : "212,74,98";
 
   return (
     <div
@@ -39,53 +62,52 @@ export function DishVisual({
       className={`absolute inset-0 ${className}`}
       style={{
         background: `
-          radial-gradient(120% 90% at 30% 20%, hsl(${teinte} 48% 26%) 0%, transparent 62%),
-          radial-gradient(90% 80% at 78% 78%, hsl(${teinte + 14} 38% 17%) 0%, transparent 58%),
-          linear-gradient(${rotation}deg, #211b14, #17130f)
+          radial-gradient(70% 65% at ${x}% ${y}%, rgba(${accent},0.26) 0%, transparent 62%),
+          radial-gradient(80% 70% at ${100 - x}% ${100 - y / 2}%, rgba(244,216,179,0.95) 0%, transparent 70%),
+          linear-gradient(${graine % 360}deg, #f6e3c9, #fbf2e6)
         `,
       }}
     >
       <svg
-        viewBox="0 0 200 200"
-        className="absolute inset-0 size-full opacity-90"
-        preserveAspectRatio="xMidYMid slice"
+        viewBox="0 0 200 120"
+        className="absolute inset-0 size-full"
+        preserveAspectRatio="xMidYMid meet"
       >
-        <defs>
-          <radialGradient id={`assiette-${produit.id}`} cx="38%" cy="32%">
-            <stop offset="0%" stopColor={`hsl(${teinte} 62% 58%)`} stopOpacity="0.55" />
-            <stop offset="100%" stopColor={`hsl(${teinte} 45% 22%)`} stopOpacity="0.1" />
-          </radialGradient>
-        </defs>
-        <circle cx="100" cy="100" r="58" fill={`url(#assiette-${produit.id})`} />
+        <circle cx="100" cy="60" r="40" fill="#fffaf4" fillOpacity="0.75" />
         <circle
           cx="100"
-          cy="100"
-          r="58"
+          cy="60"
+          r="40"
           fill="none"
-          stroke="#f5eee2"
+          stroke="#171513"
           strokeOpacity="0.16"
-          strokeWidth="0.75"
+          strokeWidth="0.8"
         />
         <circle
           cx="100"
-          cy="100"
-          r="44"
+          cy="60"
+          r="32"
           fill="none"
-          stroke="#f5eee2"
-          strokeOpacity="0.1"
-          strokeWidth="0.5"
-          strokeDasharray="2 5"
+          stroke="#171513"
+          strokeOpacity="0.12"
+          strokeWidth="0.6"
+          strokeDasharray="2 4"
         />
         <circle
           cx="100"
-          cy="100"
-          r="72"
+          cy="60"
+          r="50"
           fill="none"
-          stroke="#e7a33c"
-          strokeOpacity="0.14"
-          strokeWidth="0.5"
+          stroke={commandable ? "#de5321" : "#d44a62"}
+          strokeOpacity="0.4"
+          strokeWidth="0.8"
         />
       </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <Icone
+          className={`size-12 ${commandable ? "text-orange-fonce/75" : "text-framboise-fonce/75"}`}
+        />
+      </div>
     </div>
   );
 }

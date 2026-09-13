@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const champ =
-  "w-full rounded-ticket border border-creme/15 bg-noir px-4 py-3 text-sm text-creme placeholder:text-creme-tres-doux transition-colors focus:border-beurre/60 focus:outline-none";
+  "w-full rounded-ticket border border-encre/15 bg-papier px-4 py-3 text-sm text-encre placeholder:text-encre-pale transition-colors focus:border-orange/60 focus:outline-none";
 
 export function FormulaireContact() {
   const [etat, setEtat] = useState<"repos" | "envoi" | "envoye">("repos");
@@ -40,10 +40,10 @@ export function FormulaireContact() {
     return (
       <div
         role="status"
-        className="perfore rounded-ticket border border-pistache/35 bg-pistache/8 px-7 py-12 text-center"
+        className="perfore rounded-ticket border border-framboise/35 bg-framboise/8 px-7 py-12 text-center"
       >
-        <p className="font-display text-2xl text-creme">Message reçu.</p>
-        <p className="mx-auto mt-3 max-w-[38ch] text-sm text-creme-doux">
+        <p className="font-display text-2xl text-encre">Message reçu.</p>
+        <p className="mx-auto mt-3 max-w-[38ch] text-sm text-encre-douce">
           Nous vous répondons sous 24 h ouvrées. Pour une commande du jour, le
           téléphone reste plus rapide.
         </p>
@@ -107,7 +107,7 @@ export function FormulaireContact() {
       <button
         type="submit"
         disabled={etat === "envoi"}
-        className="rounded-ticket bg-beurre px-7 py-4 text-sm font-medium text-noir transition-colors hover:bg-beurre-clair disabled:opacity-60 sm:col-span-2"
+        className="rounded-ticket bg-orange px-7 py-4 text-sm font-medium text-encre transition-colors hover:bg-orange-vif disabled:opacity-60 sm:col-span-2"
       >
         {etat === "envoi" ? "Envoi…" : "Envoyer le message"}
       </button>
